@@ -1,0 +1,30 @@
+{
+    "name": "helmich/graphizer",
+    "description": "Store PHP syntax trees in Neo4j graph structures",
+    "require": {
+        "nikic/php-parser": "dev-master",
+        "everyman/neo4jphp": "*"
+    },
+    "license": "LGPL",
+    "authors": [
+        {
+            "name": "Martin Helmich",
+            "email": "kontakt@martin-helmich.de"
+        }
+    ],
+    "require": {
+        "php": ">= 5.5",
+        "nikic/php-parser": "dev-master",
+        "everyman/neo4jphp": "*",
+        "phpdocumentor/reflection-docblock": "*",
+        "phpunit/phpunit": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Helmich\\Graphizer\\Tests\\": "tests/",
+            "Helmich\\Graphizer\\":"src/"
+        }
+    }
+}

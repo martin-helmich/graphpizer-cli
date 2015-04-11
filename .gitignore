@@ -1,0 +1,7 @@
+
+# IntelliJ-related
+/.idea/workspace.xml
+
+# Composer-related
+/vendor/
+/composer.lock
