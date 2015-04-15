@@ -21,10 +21,10 @@ abstract class AbstractCommand extends Command {
 
 	protected function connect(InputInterface $input, OutputInterface $output) {
 		$this->backendBuilder
-			->setHost($input->getOption('neoHost'))
-			->setPort($input->getOption('neoPort'))
-			->setUser($input->getOption('neoUser'))
-			->setPassword($input->getOption('neoPassword'));
+			->setHost($input->getOption('neo-host'))
+			->setPort($input->getOption('neo-port'))
+			->setUser($input->getOption('neo-user'))
+			->setPassword($input->getOption('neo-password'));
 
 		if ($output->getVerbosity() === OutputInterface::VERBOSITY_DEBUG) {
 			$this->backendBuilder->setDebugger(new ConsoleBackendDebugger($output));

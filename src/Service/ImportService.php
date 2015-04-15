@@ -1,6 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Service;
 
+use Helmich\Graphizer\Modeler\NamespaceResolver;
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Writer\FileWriterBuilder;
 

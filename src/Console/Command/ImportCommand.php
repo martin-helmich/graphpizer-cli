@@ -11,7 +11,7 @@ class ImportCommand extends AbstractCommand {
 
 	protected function configure() {
 		$this
-			->setName('import')
+			->setName('import:ast')
 			->setDescription('Import a set of files as AST')
 			->addOption('prune', NULL, InputOption::VALUE_NONE, 'Prune the database before execution')
 			->addArgument('dir', InputArgument::IS_ARRAY | InputArgument::REQUIRED);
@@ -20,10 +20,15 @@ class ImportCommand extends AbstractCommand {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$backend = $this->connect($input, $output);
 
-		$debugCallback = NULL;
+		$count         = 0;
+		$debugCallback = function ($file) use (&$count) {
+			$count++;
+		};
+
 		if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-			$debugCallback = function ($file) use ($output) {
+			$debugCallback = function ($file) use ($output, &$count) {
 				$output->writeln('Processing file <comment>' . $file . '</comment>');
+				$count ++;
 			};
 		}
 
@@ -33,5 +38,7 @@ class ImportCommand extends AbstractCommand {
 			$input->getOption('prune'),
 			$debugCallback
 		);
+
+		$output->writeln('Processed <comment>' . $count . '</comment> files.');
 	}
 }

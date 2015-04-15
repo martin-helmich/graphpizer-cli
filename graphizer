@@ -20,8 +20,10 @@
  */
 
 use Helmich\Graphizer\Console\Application;
+use Helmich\Graphizer\Console\Command\GenerateModelCommand;
 use Helmich\Graphizer\Console\Command\ImportCommand;
 use Helmich\Graphizer\Console\Command\CommandBuilder;
+use Helmich\Graphizer\Console\Command\PruneCommand;
 
 if (file_exists(__DIR__ . '/vendor/autoload.php'))
 {
@@ -40,4 +42,6 @@ $commandBuilder = new CommandBuilder();
 
 $app = new Application('graphizer');
 $app->add($commandBuilder->build(ImportCommand::class));
+$app->add($commandBuilder->build(PruneCommand::class));
+$app->add($commandBuilder->build(GenerateModelCommand::class));
 $app->run();
