@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Helmich\Graphizer\Console\AnalyzeCommand;
+use Helmich\Graphizer\Console\Command\AnalyzeCommand;
 use Symfony\Component\Console\Application;
 
 if (file_exists(__DIR__ . '/vendor/autoload.php'))
