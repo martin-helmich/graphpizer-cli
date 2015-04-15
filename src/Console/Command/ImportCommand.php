@@ -1,7 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
-use Helmich\Graphizer\Writer\FileWriterBuilder;
+use Helmich\Graphizer\Service\ImportService;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -20,26 +20,18 @@ class ImportCommand extends AbstractCommand {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$backend = $this->connect($input, $output);
 
-		if ($input->getOption('prune')) {
-			$output->writeln('Pruning database.');
-			$backend->wipe();
-		}
-
-		$paths      = $input->getArgument('dir');
-		$fileWriter = (new FileWriterBuilder($backend))->build();
-
+		$debugCallback = NULL;
 		if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-			$fileWriter->setDebugListener(function ($file) use ($output) {
+			$debugCallback = function ($file) use ($output) {
 				$output->writeln('Processing file <comment>' . $file . '</comment>');
-			});
+			};
 		}
 
-		foreach ($paths as $path) {
-			if (is_file($path)) {
-				$fileWriter->readFile($path);
-			} else {
-				$fileWriter->readDirectory($path);
-			}
-		}
+		$importService = new ImportService($backend);
+		$importService->importSourceFiles(
+			$input->getArgument('dir'),
+			$input->getOption('prune'),
+			$debugCallback
+		);
 	}
 }
