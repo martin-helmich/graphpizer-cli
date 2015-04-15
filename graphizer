@@ -19,8 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Helmich\Graphizer\Console\Command\AnalyzeCommand;
-use Symfony\Component\Console\Application;
+use Helmich\Graphizer\Console\Application;
+use Helmich\Graphizer\Console\Command\ImportCommand;
+use Helmich\Graphizer\Console\Command\CommandBuilder;
 
 if (file_exists(__DIR__ . '/vendor/autoload.php'))
 {
@@ -35,6 +36,8 @@ else
 	die('Could not find an autoload.php. Did you set up all dependencies?');
 }
 
+$commandBuilder = new CommandBuilder();
+
 $app = new Application('graphizer');
-$app->add(new AnalyzeCommand());
+$app->add($commandBuilder->build(ImportCommand::class));
 $app->run();

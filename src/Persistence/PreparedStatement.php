@@ -20,10 +20,16 @@ class PreparedStatement {
 	 */
 	private $resultVar;
 
-	public function __construct(Client $client, $cypher, $resultVar = NULL) {
+	/**
+	 * @var DebuggerInterface
+	 */
+	private $debugger;
+
+	public function __construct(Client $client, $cypher, $resultVar = NULL, DebuggerInterface $debugger = NULL) {
 		$this->client = $client;
 		$this->cypher = $cypher;
 		$this->resultVar = $resultVar;
+		$this->debugger = $debugger ? $debugger : new NullDebugger();
 	}
 
 	/**
@@ -39,6 +45,8 @@ class PreparedStatement {
 
 		$query = new Query($this->client, $this->cypher, $parameters);
 		$result = new TypedResultSetProxy($query->getResultSet());
+
+		$this->debugger->queryExecuted($this->cypher, $parameters);
 
 		if ($this->resultVar !== NULL) {
 			return new SinglePropertyFilter($result, $this->resultVar);
