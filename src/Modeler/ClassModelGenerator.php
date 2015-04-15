@@ -45,7 +45,7 @@ class ClassModelGenerator {
 	}
 
 	private function consolidateTypesWithClasses() {
-		$this->backend->execute('MATCH (t:Type), (n:Class) WHERE t.name = n.name CREATE (t)-[:IS]->(c)');
+		$this->backend->execute('MATCH (t:Type), (c:Class) WHERE t.name = c.fqcn MERGE (t)-[:IS]->(c)');
 	}
 
 	private function findInterfaceImplementations() {
@@ -258,6 +258,8 @@ class ClassModelGenerator {
 				return $buildOrGetPrimitiveNode('null');
 			case 'array':
 				return $buildOrGetPrimitiveNode('array');
+			case 'callable':
+				return $buildOrGetPrimitiveNode('callable');
 			case 'mixed':
 				return NULL;
 			default:

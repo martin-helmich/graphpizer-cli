@@ -3,6 +3,7 @@ namespace Helmich\Graphizer\Persistence;
 
 use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Query\Row;
+use Everyman\Neo4j\Relationship;
 
 class TypedResultRowAdapter implements \Iterator, \Countable, \ArrayAccess {
 
@@ -20,6 +21,14 @@ class TypedResultRowAdapter implements \Iterator, \Countable, \ArrayAccess {
 	 * @return Node
 	 */
 	public function node($key) {
+		return $this[$key];
+	}
+
+	/**
+	 * @param string $key
+	 * @return Relationship
+	 */
+	public function relationship($key) {
 		return $this[$key];
 	}
 

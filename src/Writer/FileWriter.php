@@ -41,7 +41,7 @@ class FileWriter {
 	public function readDirectory($directory) {
 		$dirIterator = new \RecursiveDirectoryIterator($directory);
 		$iteratorIterator = new \RecursiveIteratorIterator($dirIterator);
-		$regexIterator = new \RegexIterator($iteratorIterator, '/\.php[345]?$/', \RecursiveRegexIterator::GET_MATCH);
+		$regexIterator = new \RegexIterator($iteratorIterator, '/^(.*)\.php[345]?$/', \RecursiveRegexIterator::GET_MATCH);
 
 		foreach($regexIterator as $fileInfo) {
 			$this->readFile($fileInfo[0]);
