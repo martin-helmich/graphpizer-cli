@@ -40,7 +40,7 @@ class FullCycleTest extends AbstractFunctionalTestCase {
 	}
 
 	public function getFixtureFiles() {
-		$a = glob(__DIR__ . '/Fixtures/*.php');
+		$a = glob(__DIR__ . '/../Fixtures/*.php');
 		return array_map(function($file) {
 			return [basename($file)];
 		}, $a);
@@ -57,7 +57,7 @@ class FullCycleTest extends AbstractFunctionalTestCase {
 	 * @medium
 	 */
 	public function reconstitutedTreeIsIdenticalToOriginal($fixtureFile) {
-		$ast = $this->parser->parse(file_get_contents(__DIR__ . '/Fixtures/' . $fixtureFile));
+		$ast = $this->parser->parse(file_get_contents(__DIR__ . '/../Fixtures/' . $fixtureFile));
 		$this->writer->writeNodeCollection($ast);
 
 		$query = new Query(static::$client, 'MATCH (c:Collection) WHERE c.fileRoot=true RETURN c');

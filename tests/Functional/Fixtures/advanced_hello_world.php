@@ -8,6 +8,7 @@ interface Greeter {
 class GermanGreeter implements Greeter {
 
 	public function greet($who) {
+		// German for "Hello $who"
 		return "Hallo $who!";
 	}
 }
@@ -46,5 +47,12 @@ class SpokenGreeter implements Greeter {
 	}
 }
 
-$spokenGreeter = new SpokenGreeter(new DefaultSayer(), new GermanGreeter());
-$spokenGreeter->greet("World");
+class Application {
+	public function run() {
+		$spokenGreeter = new SpokenGreeter(new DefaultSayer(), new GermanGreeter());
+		$spokenGreeter->greet("World");
+	}
+}
+
+$app = new Application();
+$app->run();

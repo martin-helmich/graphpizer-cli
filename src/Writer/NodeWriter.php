@@ -1,6 +1,24 @@
 <?php
 namespace Helmich\Graphizer\Writer;
 
+/*
+ * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 use Everyman\Neo4j\Node as NeoNode;
 use Helmich\Graphizer\Data\NodeCollection;
 use Helmich\Graphizer\Persistence\Backend;
@@ -49,6 +67,10 @@ class NodeWriter implements NodeWriterInterface {
 			if ($subNode instanceof Node\Name) {
 				$neoNode->setProperty($subNodeName, $subNode->toString());
 			}
+		}
+
+		if ($node instanceof Node\Name) {
+			$neoNode->setProperty('allParts', $node->toString());
 		}
 	}
 
@@ -111,16 +133,6 @@ class NodeWriter implements NodeWriterInterface {
 						}
 
 						if (is_scalar($realSubNode)) {
-//							if (is_string($realSubNode)) {
-//								$realSubNode = new Node\Scalar\String_($realSubNode);
-//							} elseif (is_int($realSubNode) || is_long($realSubNode)) {
-//								$realSubNode = new Node\Scalar\LNumber($realSubNode);
-//							} elseif (is_double($realSubNode) || is_float($realSubNode)) {
-//								$realSubNode = new Node\Scalar\DNumber($realSubNode);
-//							} else {
-//								throw new \Exception('Unconsidered scalar type "' . gettype($realSubNode) . '"!');
-//							}
-
 							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
 						} else {
 							$neoSubNode = $this->writeNode($realSubNode);
@@ -160,19 +172,10 @@ class NodeWriter implements NodeWriterInterface {
 	protected function getNodeProperties(Node $node) {
 		$properties = $node->getAttributes();
 
+		// Comments are treated separately; they are not scalar values and
+		// cannot be stored as a node attribute. Indead, we store each comment
+		// as a separate node and simply store the relation.
 		unset($properties['comments']);
-
-//		$newComments = [];
-//		foreach((array)$properties['comments'] as $comment) {
-//			$newComments[] = [
-//				'line' => $comment->getLine(),
-//				'text' => $comment->getText(),
-//				'isDoc' => $comment instanceof Doc
-//			];
-//		}
-//
-//		$properties['comments'] = $newComments;
-
 		return $properties;
 	}
 }

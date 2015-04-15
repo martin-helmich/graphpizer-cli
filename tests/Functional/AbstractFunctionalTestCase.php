@@ -31,6 +31,11 @@ abstract class AbstractFunctionalTestCase extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals($expectedOutput, $output);
 	}
 
+	public function assertCypherQueryReturnsCount($expectedCount, $cypher) {
+		$query = new Query(static::$client, $cypher);
+		$this->assertEquals($expectedCount, $query->getResultSet()->count());
+	}
+
 	public function tearDown() {
 //		$cypher = 'MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r';
 //		static::$client->executeCypherQuery(new Query(static::$client, $cypher));
