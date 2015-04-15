@@ -17,6 +17,9 @@
         "nikic/php-parser": "dev-master",
         "everyman/neo4jphp": "*",
         "phpdocumentor/reflection-docblock": "*",
+        "symfony/console": "*"
+    },
+    "require-dev": {
         "phpunit/phpunit": "*"
     },
     "minimum-stability": "dev",
