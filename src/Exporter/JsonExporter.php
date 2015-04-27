@@ -39,16 +39,17 @@ class JsonExporter implements ExporterInterface {
 		}
 
 		$q =
-			$this->backend->createQuery(
-				'MATCH (a)-[r]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN r'
+			$this->backend->createQuery('
+				MATCH (a)-[r]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN a, b, r UNION
+				MATCH (a)-[r]->(t:Type)-[:IS]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN a, b, r'
 			);
 		foreach ($q->execute() as $row) {
 			$r       = $row->relationship('r');
 			$edges[] = [
 				'id'     => $r->getId(),
 				'type'   => $r->getType(),
-				'source' => $idMap[$r->getStartNode()->getId()],
-				'target' => $idMap[$r->getEndNode()->getId()]
+				'source' => $idMap[$row->node('a')->getId()],
+				'target' => $idMap[$row->node('b')->getId()]
 			];
 		}
 

@@ -45,7 +45,7 @@ class ClassModelGenerator {
 	}
 
 	private function consolidateTypesWithClasses() {
-		$this->backend->execute('MATCH (t:Type), (c:Class) WHERE t.name = c.fqcn MERGE (t)-[:IS]->(c)');
+		$this->backend->execute('MATCH (t:Type), (c) WHERE t.name = c.fqcn AND (c:Class OR c:Interface) MERGE (t)-[:IS]->(c)');
 	}
 
 	private function findInterfaceImplementations() {

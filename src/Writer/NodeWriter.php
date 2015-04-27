@@ -42,36 +42,161 @@ class NodeWriter implements NodeWriterInterface {
 	}
 
 	public function writeNodeCollection(array $nodes) {
-		$nodes = array_map(
-			function (Node $node) {
-				return $this->writeNode($node);
-			},
-			$nodes
-		);
+		$colId = uniqid('node');
 
-		$collection = $this->backend->createNode(['fileRoot' => TRUE], NodeCollection::NODE_NAME);
+		$bulk = new Bulk($this->backend);
+		$bulk->push($colId, "CREATE ({$colId}:Collection{fileRoot: true})");
 
-		foreach ($nodes as $i => $node) {
-			$collection
-				->relateTo($node, 'HAS')
-				->setProperty('ordering', $i)
-				->save();
+		$i = 0;
+		foreach ($nodes as $node) {
+			$nodeId = $this->writeNodeInner($node, $bulk);
+			$bulk->push(uniqid('node'), "CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
+
+			$i ++;
 		}
 
-		return $collection;
+		$bulk->push(uniqid('node'), "RETURN ${colId}");
+
+		return $bulk->evaluate()[0]->node($colId);
+//		echo($cypher);
+
+//		$nodes = array_map(
+//			function (Node $node) {
+//				return $this->writeNode($node);
+//			},
+//			$nodes
+//		);
+//
+//		$collection = $this->backend->createNode(['fileRoot' => TRUE], NodeCollection::NODE_NAME);
+//
+//		foreach ($nodes as $i => $node) {
+//			$collection
+//				->relateTo($node, 'HAS')
+//				->setProperty('ordering', $i)
+//				->save();
+//		}
+//
+//		return $collection;
 	}
 
-	private function enrichNode(Node $node, NeoNode $neoNode) {
+	public function writeNode(Node $node) {
+		$bulk = new Bulk();
+
+		$this->writeNodeInner($node, $bulk);
+
+		$cypher = $bulk->renderCypher();
+		var_dump($cypher);
+	}
+
+	/**
+	 * @param Node $node
+	 * @param Bulk $bulk
+	 * @return NeoNode
+	 */
+	public function writeNodeInner(Node $node, Bulk $bulk) {
+		$commentText = $node->getDocComment() ? $node->getDocComment()->getText() : NULL;
+
+//		$neoNode = $this->backend->createNode($this->getNodeProperties($node), $node->getType());
+//		$neoNode->setProperty('docComment', $commentText);
+//		$this->enrichNode($node, $neoNode);
+//		$neoNode->save();
+
+		$properties = $this->getNodeProperties($node);
+		$properties = $this->enrichNodeProperties($node, $properties);
+
+		if (NULL !== $commentText) {
+			$properties['docComment'] = $commentText;
+		}
+
+		$nodeId = uniqid('node');
+		$args = ["prop_{$nodeId}" => $properties];
+		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
+
+		$bulk->push($nodeId, $cypher, $args);
+
+		$this->storeNodeComments($node, $nodeId, $bulk);
+
+		foreach ($node->getSubNodeNames() as $subNodeName) {
+			$subNode = $node->{$subNodeName};
+			if (is_array($subNode)) {
+				if ($this->isScalarArray($subNode)) {
+					if (!empty($subNode)) {
+						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
+						#$neoNode->setProperty($subNodeName, $subNode);
+						#$neoNode->save();
+					} else {
+						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => '~~EMPTY_ARRAY~~']);
+//						$neoNode->setProperty($subNodeName, '~~EMPTY_ARRAY~~');
+//						$neoNode->save();
+					}
+				} else {
+					$collection = NULL;
+					$collectionId = NULL;
+
+					foreach ($subNode as $i => $realSubNode) {
+						if ($collectionId === NULL) {
+							$collectionId = uniqid('node');
+							$cypher = "CREATE ({$collectionId}:Collection)";
+							$bulk->push($collectionId, $cypher);
+//							$collection = $this->backend->createNode([], NodeCollection::NODE_NAME);
+						}
+
+						if (is_scalar($realSubNode)) {
+							$subNodeId = uniqid('node');
+							$bulk->push($subNodeId, "CREATE (${subNodeId}:Literal{prop_{$subNodeId}})", ["prop_{$subNodeId}" => ['value' => $realSubNode]]);
+//							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
+						} else {
+							$subNodeId = $this->writeNodeInner($realSubNode, $bulk);
+						}
+
+						$bulk->push(uniqid('node'), "CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
+//						$collection
+//							->relateTo($neoSubNode, 'HAS')
+//							->setProperty('ordering', $i)
+//							->save();
+					}
+
+					if ($collectionId !== NULL) {
+						$relationName = 'SUB_' . strtoupper($subNodeName);
+						$bulk->push(uniqid('node'), "CREATE ({$nodeId})-[:{$relationName}]->({$collectionId})");
+//						$neoNode
+//							->relateTo($collection, 'SUB_' . strtoupper($subNodeName))
+//							->save();
+					}
+				}
+			} elseif ($subNode instanceof Node) {
+				$subNodeId = $this->writeNodeInner($subNode, $bulk);
+				$relationName = 'SUB_' . strtoupper($subNodeName);
+				$bulk->push(uniqid('node'), "CREATE ({$nodeId})-[:{$relationName}]->({$subNodeId})");
+
+//				$neoNode
+//					->relateTo($neoSubNode, 'SUB_' . strtoupper($subNodeName))
+//					->setProperty('ordering', 0)
+//					->save();
+			} else {
+				$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
+//				$neoNode->setProperty($subNodeName, $subNode);
+//				$neoNode->save();
+			}
+		}
+
+//		return $neoNode;
+		return $nodeId;
+	}
+
+	private function enrichNodeProperties(Node $node, array $properties) {
 		foreach ($node->getSubNodeNames() as $subNodeName) {
 			$subNode = $node->{$subNodeName};
 			if ($subNode instanceof Node\Name) {
-				$neoNode->setProperty($subNodeName, $subNode->toString());
+				$properties[$subNodeName] = $subNode->toString();
 			}
 		}
 
 		if ($node instanceof Node\Name) {
-			$neoNode->setProperty('allParts', $node->toString());
+			$properties['allParts'] = $node->toString();
 		}
+
+		return $properties;
 	}
 
 	private function isScalarArray($array) {
@@ -87,82 +212,18 @@ class NodeWriter implements NodeWriterInterface {
 		return TRUE;
 	}
 
-	private function storeNodeComments(Node $phpNode, NeoNode $neoNode) {
+	private function storeNodeComments(Node $phpNode, $nodeId, Bulk $bulk) {
 		if ($phpNode->hasAttribute('comments')) {
 			foreach ($phpNode->getAttribute('comments') as $comment) {
-				$commentNode = $this->commentWriter->writeComment($comment);
-				$neoNode
-					->relateTo($commentNode, 'HAS_COMMENT')
-					->save();
+				$id = $this->commentWriter->writeComment($comment, $bulk);
+				$bulk->push(uniqid('node'), "CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
+//
+//				$commentNode = $this->commentWriter->writeComment($comment);
+//				$neoNode
+//					->relateTo($commentNode, 'HAS_COMMENT')
+//					->save();
 			}
 		}
-	}
-
-	/**
-	 * @param Node $node
-	 * @return NeoNode
-	 * @throws \Everyman\Neo4j\Exception
-	 */
-	public function writeNode(Node $node) {
-		$commentText = $node->getDocComment() ? $node->getDocComment()->getText() : NULL;
-
-		$neoNode = $this->backend->createNode($this->getNodeProperties($node), $node->getType());
-		$neoNode->setProperty('docComment', $commentText);
-		$this->enrichNode($node, $neoNode);
-		$neoNode->save();
-
-		$this->storeNodeComments($node, $neoNode);
-
-		foreach ($node->getSubNodeNames() as $subNodeName) {
-			$subNode = $node->{$subNodeName};
-			if (is_array($subNode)) {
-				if ($this->isScalarArray($subNode)) {
-					if (!empty($subNode)) {
-						$neoNode->setProperty($subNodeName, $subNode);
-						$neoNode->save();
-					} else {
-						$neoNode->setProperty($subNodeName, '~~EMPTY_ARRAY~~');
-						$neoNode->save();
-					}
-				} else {
-					$collection = NULL;
-
-					foreach ($subNode as $i => $realSubNode) {
-						if ($collection === NULL) {
-							$collection = $this->backend->createNode([], NodeCollection::NODE_NAME);
-						}
-
-						if (is_scalar($realSubNode)) {
-							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
-						} else {
-							$neoSubNode = $this->writeNode($realSubNode);
-						}
-						$collection
-							->relateTo($neoSubNode, 'HAS')
-							->setProperty('ordering', $i)
-							->save();
-					}
-
-					if ($collection !== NULL) {
-						$neoNode
-							->relateTo($collection, 'SUB_' . strtoupper($subNodeName))
-							->save();
-					}
-				}
-			} elseif ($subNode instanceof Node) {
-				$neoSubNode = $this->writeNode($subNode);
-
-				$neoNode
-					->relateTo($neoSubNode, 'SUB_' . strtoupper($subNodeName))
-					->setProperty('ordering', 0)
-					->save();
-			} else {
-				$neoNode->setProperty($subNodeName, $subNode);
-				$neoNode->save();
-			}
-		}
-
-		return $neoNode;
 	}
 
 	/**
