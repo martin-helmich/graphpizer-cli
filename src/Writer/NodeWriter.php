@@ -45,17 +45,17 @@ class NodeWriter implements NodeWriterInterface {
 		$colId = uniqid('node');
 
 		$bulk = new Bulk($this->backend);
-		$bulk->push($colId, "CREATE ({$colId}:Collection{fileRoot: true})");
+		$bulk->push("CREATE ({$colId}:Collection{fileRoot: true})");
 
 		$i = 0;
 		foreach ($nodes as $node) {
 			$nodeId = $this->writeNodeInner($node, $bulk);
-			$bulk->push(uniqid('node'), "CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
+			$bulk->push("CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
 
 			$i ++;
 		}
 
-		$bulk->push(uniqid('node'), "RETURN ${colId}");
+		$bulk->push("RETURN ${colId}");
 
 		return $bulk->evaluate()[0]->node($colId);
 //		echo($cypher);
@@ -84,7 +84,7 @@ class NodeWriter implements NodeWriterInterface {
 
 		$nodeId = $this->writeNodeInner($node, $bulk);
 
-		$bulk->push(uniqid(), "RETURN ${nodeId}");
+		$bulk->push("RETURN ${nodeId}");
 		return $bulk->evaluate()[0]->node($nodeId);
 	}
 
@@ -112,7 +112,7 @@ class NodeWriter implements NodeWriterInterface {
 		$args = ["prop_{$nodeId}" => $properties];
 		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
 
-		$bulk->push($nodeId, $cypher, $args);
+		$bulk->push($cypher, $args);
 
 		$this->storeNodeComments($node, $nodeId, $bulk);
 
@@ -137,19 +137,19 @@ class NodeWriter implements NodeWriterInterface {
 						if ($collectionId === NULL) {
 							$collectionId = uniqid('node');
 							$cypher = "CREATE ({$collectionId}:Collection)";
-							$bulk->push($collectionId, $cypher);
+							$bulk->push($cypher);
 //							$collection = $this->backend->createNode([], NodeCollection::NODE_NAME);
 						}
 
 						if (is_scalar($realSubNode)) {
 							$subNodeId = uniqid('node');
-							$bulk->push($subNodeId, "CREATE (${subNodeId}:Literal{prop_{$subNodeId}})", ["prop_{$subNodeId}" => ['value' => $realSubNode]]);
+							$bulk->push("CREATE (${subNodeId}:Literal{prop_{$subNodeId}})", ["prop_{$subNodeId}" => ['value' => $realSubNode]]);
 //							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
 						} else {
 							$subNodeId = $this->writeNodeInner($realSubNode, $bulk);
 						}
 
-						$bulk->push(uniqid('node'), "CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
+						$bulk->push("CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
 //						$collection
 //							->relateTo($neoSubNode, 'HAS')
 //							->setProperty('ordering', $i)
@@ -158,7 +158,7 @@ class NodeWriter implements NodeWriterInterface {
 
 					if ($collectionId !== NULL) {
 						$relationName = 'SUB_' . strtoupper($subNodeName);
-						$bulk->push(uniqid('node'), "CREATE ({$nodeId})-[:{$relationName}]->({$collectionId})");
+						$bulk->push("CREATE ({$nodeId})-[:{$relationName}]->({$collectionId})");
 //						$neoNode
 //							->relateTo($collection, 'SUB_' . strtoupper($subNodeName))
 //							->save();
@@ -167,7 +167,7 @@ class NodeWriter implements NodeWriterInterface {
 			} elseif ($subNode instanceof Node) {
 				$subNodeId = $this->writeNodeInner($subNode, $bulk);
 				$relationName = 'SUB_' . strtoupper($subNodeName);
-				$bulk->push(uniqid('node'), "CREATE ({$nodeId})-[:{$relationName}]->({$subNodeId})");
+				$bulk->push("CREATE ({$nodeId})-[:{$relationName}]->({$subNodeId})");
 
 //				$neoNode
 //					->relateTo($neoSubNode, 'SUB_' . strtoupper($subNodeName))
@@ -216,7 +216,7 @@ class NodeWriter implements NodeWriterInterface {
 		if ($phpNode->hasAttribute('comments')) {
 			foreach ($phpNode->getAttribute('comments') as $comment) {
 				$id = $this->commentWriter->writeComment($comment, $bulk);
-				$bulk->push(uniqid('node'), "CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
+				$bulk->push("CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
 //
 //				$commentNode = $this->commentWriter->writeComment($comment);
 //				$neoNode

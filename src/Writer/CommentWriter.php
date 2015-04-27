@@ -24,7 +24,7 @@ class CommentWriter {
 		}
 
 		$cypher = "CREATE ({$id}:{$label} {prop_{$id}})";
-		$bulk->push($id, $cypher, ["prop_{$id}" => ['text' => $comment->getText(), 'line' => $comment->getLine()]]);
+		$bulk->push($cypher, ["prop_{$id}" => ['text' => $comment->getText(), 'line' => $comment->getLine()]]);
 
 		return $id;
 

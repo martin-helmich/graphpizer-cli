@@ -9,8 +9,6 @@ class Bulk {
 
 	private $arguments     = [];
 
-	private $nodeIdStack   = [];
-
 	/**
 	 * @var Backend
 	 */
@@ -20,8 +18,7 @@ class Bulk {
 		$this->backend = $backend;
 	}
 
-	public function push($id, $cypher, array $arguments = []) {
-		$this->nodeIdStack[]   = $id;
+	public function push($cypher, array $arguments = []) {
 		$this->cypherQueries[] = $cypher;
 		$this->arguments       = array_merge($this->arguments, $this->filterNullValues($arguments));
 	}
