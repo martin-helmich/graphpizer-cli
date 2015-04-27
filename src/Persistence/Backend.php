@@ -51,6 +51,13 @@ class Backend {
 		$this->debugger->queryExecuted($cypher, $args);
 	}
 
+	/**
+	 * @return Client
+	 */
+	public function getClient() {
+		return $this->client;
+	}
+
 	public function wipe() {
 		$this->execute('MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r');
 	}

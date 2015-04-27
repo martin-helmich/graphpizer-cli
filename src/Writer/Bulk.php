@@ -5,17 +5,26 @@ use Helmich\Graphizer\Persistence\Backend;
 
 class Bulk {
 
-	private $cypherQueries = [];
+	protected $cypherQueries = [];
 
-	private $arguments     = [];
+	protected $arguments     = [];
 
 	/**
 	 * @var Backend
 	 */
-	private $backend;
+	protected $backend;
 
-	public function __construct(Backend $backend) {
-		$this->backend = $backend;
+	public function __construct(Backend $backend, array $queries = [], array $arguments = []) {
+		$this->backend       = $backend;
+		$this->cypherQueries = $queries;
+		$this->arguments     = $arguments;
+	}
+
+	public function merge(Bulk $other) {
+		$mergedQueries   = array_merge($this->cypherQueries, $other->cypherQueries);
+		$mergedArguments = array_merge($this->arguments, $other->arguments);
+
+		return new Bulk($this->backend, $mergedQueries, $mergedArguments);
 	}
 
 	public function push($cypher, array $arguments = []) {
@@ -52,8 +61,19 @@ class Bulk {
 	 * @return \Helmich\Graphizer\Persistence\TypedResultRowAdapter[]
 	 */
 	public function evaluate() {
+		if (0 === count($this->cypherQueries)) {
+			return NULL;
+		}
+
 		$cypher = $this->renderCypher();
 		$query  = $this->backend->createQuery($cypher);
-		return $query->execute($this->arguments);
+
+		try {
+			return $query->execute($this->arguments);
+		}
+		catch (\Exception $e) {
+			var_dump($cypher);
+			throw $e;
+		}
 	}
 }
