@@ -37,7 +37,7 @@ class EnterpriseClassModelGeneratorTest extends AbstractFunctionalTestCase {
 	 */
 	public function classesAreLoaded() {
 		$this->assertCypherQueryReturnsCount(
-			10,
+			17,
 			'MATCH (c1:Class)
 			 RETURN c1'
 		);

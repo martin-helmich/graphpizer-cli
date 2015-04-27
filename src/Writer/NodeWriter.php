@@ -80,12 +80,12 @@ class NodeWriter implements NodeWriterInterface {
 	}
 
 	public function writeNode(Node $node) {
-		$bulk = new Bulk();
+		$bulk = new Bulk($this->backend);
 
-		$this->writeNodeInner($node, $bulk);
+		$nodeId = $this->writeNodeInner($node, $bulk);
 
-		$cypher = $bulk->renderCypher();
-		var_dump($cypher);
+		$bulk->push(uniqid(), "RETURN ${nodeId}");
+		return $bulk->evaluate()[0]->node($nodeId);
 	}
 
 	/**

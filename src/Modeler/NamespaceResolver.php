@@ -35,8 +35,6 @@ class NamespaceResolver {
 				$knownAliases[$import->getProperty('alias')] = $import->getProperty('name');
 			}
 
-			var_dump("imports for " . $namespace->getProperty('name'), $knownAliases);
-
 			foreach ($nameQuery->execute(['node' => $namespace]) as $name) {
 				$nameString = $name->getProperty('allParts');
 				if (array_key_exists($nameString, $knownAliases)) {
@@ -46,11 +44,19 @@ class NamespaceResolver {
 					if ($namespace->getProperty('name')) {
 						$name->setProperty('fullName', $namespace->getProperty('name') . '\\' . $nameString);
 						$name->save();
-					} else {
-//						var_dump($name->getProperties());
 					}
 				}
 			}
 		}
+
+		$this->treatUnnamespacedNodes();
+	}
+
+	private function treatUnnamespacedNodes() {
+		$cypher =
+			'MATCH (c:Collection)-[:HAS]->(ns)-[*..]->(n:Name)
+			 WHERE c.fileRoot = true AND NOT ns:Stmt_Namespace
+			 SET n.fullName = n.allParts';
+		$this->backend->execute($cypher);
 	}
 }

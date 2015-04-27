@@ -42,7 +42,7 @@ else
 
 $commandBuilder = new CommandBuilder();
 
-$app = new Application('graphizer');
+$app = new Application('GraPHPizer', 'master');
 $app->add($commandBuilder->build(ImportCommand::class));
 $app->add($commandBuilder->build(PruneCommand::class));
 $app->add($commandBuilder->build(GenerateModelCommand::class));
