@@ -1,0 +1,12 @@
+{
+    "classesAreLoaded": 1.9630041122437,
+    "propertiesAreLoaded": 0.33675694465637,
+    "methodsAreLoaded": 0.35436296463013,
+    "interfacesAreLoaded": 0.33504700660706,
+    "implementationsAreLoaded": 0.33824300765991,
+    "reconstitutedTreeIsIdenticalToOriginal with data set #0": 0.41342997550964,
+    "reconstitutedTreeIsIdenticalToOriginal with data set #1": 1.5871520042419,
+    "reconstitutedTreeIsIdenticalToOriginal with data set #2": 0.037074089050293,
+    "scalarNodeIsCorrectlyStored": 0.1616108417511,
+    "commentsAreStored": 0.0092730522155762
+}

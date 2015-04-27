@@ -10,4 +10,11 @@
         timeoutForSmallTests="1"
         timeoutForMediumTests="10"
         timeoutForLargeTests="60">
+    <listeners>
+        <listener class="Helmich\Graphizer\Tests\Listener\BenchmarkListener">
+            <arguments>
+                <string>benchmarks.json</string>
+            </arguments>
+        </listener>
+    </listeners>
 </phpunit>
