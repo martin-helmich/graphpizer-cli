@@ -65,7 +65,7 @@ class NamespaceResolver {
 				$id = uniqid('node');
 				if (array_key_exists($nameString, $knownAliases)) {
 					$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
-					$writeBulk->push("SET {$id}.fullName={fullname}", ['fullname' => $knownAliases[$nameString]]);
+					$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $knownAliases[$nameString]]);
 //					$bulk->push(
 //						"MATCH ({$id}) WHERE id({$id})={node} SET {$id}.fullName={fullname}",
 //						['fullname' => $knownAliases[$nameString], 'node' => $name->getId()]
@@ -77,12 +77,12 @@ class NamespaceResolver {
 //							['fullname' => $knownAliases[$nameString], 'node' => $name->getId()]
 //						)
 //					);
-					$name->setProperty('fullName', $knownAliases[$nameString]);
-					$name->save();
+//					$name->setProperty('fullName', $knownAliases[$nameString]);
+//					$name->save();
 				} else {
 					if ($namespace->getProperty('name')) {
 						$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
-						$writeBulk->push("SET {$id}.fullName={fullname}", ['fullname' => $namespace->getProperty('name'). '\\' . $nameString]);
+						$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $namespace->getProperty('name'). '\\' . $nameString]);
 //						$bulk->push(
 //							"MATCH ({$id}) WHERE id({$id})={node} SET {$id}.fullName={fullname}",
 //							['fullname' => $namespace->getProperty('name'). '\\' . $nameString, 'node' => $name->getId()]
@@ -94,8 +94,8 @@ class NamespaceResolver {
 //								['fullname' => $namespace->getProperty('name'). '\\' . $nameString, 'node' => $name->getId()]
 //							)
 //						);
-//						$name->setProperty('fullName', $namespace->getProperty('name') . '\\' . $nameString);
-//						$name->save();
+						$name->setProperty('fullName', $namespace->getProperty('name') . '\\' . $nameString);
+						$name->save();
 					}
 				}
 			}

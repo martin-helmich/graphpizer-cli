@@ -36,7 +36,7 @@ class NamespaceResolverTest extends AbstractFunctionalTestCase {
 	 * @medium
 	 */
 	public function namespacesAreResolved() {
-		$cypher = 'MATCH (n:Stmt_Name) WHERE n.fullName = {name} RETURN n';
-		$this->assertCypherQueryReturnsCount(1, $cypher, ['name' => 'Big\Enterprise\Output\ConsoleOutput']);
+		$cypher = 'MATCH (n:Name) WHERE n.fullName = {name} RETURN n';
+		$this->assertCypherQueryReturnsMinimumCount(1, $cypher, ['name' => 'Big\Enterprise\Output\ConsoleOutput']);
 	}
 }

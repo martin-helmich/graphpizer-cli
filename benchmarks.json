@@ -1,13 +1,13 @@
 {
-    "classesAreLoaded": 2.0118350982666,
-    "propertiesAreLoaded": 0.34393382072449,
-    "methodsAreLoaded": 0.33252882957458,
-    "interfacesAreLoaded": 0.33250617980957,
-    "implementationsAreLoaded": 0.33275985717773,
-    "namespacesAreResolved": 1.9540121555328,
-    "reconstitutedTreeIsIdenticalToOriginal with data set #0": 0.40550208091736,
-    "reconstitutedTreeIsIdenticalToOriginal with data set #1": 1.6802408695221,
-    "reconstitutedTreeIsIdenticalToOriginal with data set #2": 0.04109001159668,
-    "scalarNodeIsCorrectlyStored": 0.15984606742859,
-    "commentsAreStored": 0.0084030628204346
+    "classesAreLoaded": 2.708731174469,
+    "propertiesAreLoaded": 0.46237397193909,
+    "methodsAreLoaded": 0.45170092582703,
+    "interfacesAreLoaded": 0.44085502624512,
+    "implementationsAreLoaded": 0.4427011013031,
+    "namespacesAreResolved": 2.6211538314819,
+    "reconstitutedTreeIsIdenticalToOriginal with data set #0": 0.61507105827332,
+    "reconstitutedTreeIsIdenticalToOriginal with data set #1": 2.5830779075623,
+    "reconstitutedTreeIsIdenticalToOriginal with data set #2": 0.078624963760376,
+    "scalarNodeIsCorrectlyStored": 0.1633460521698,
+    "commentsAreStored": 0.0096530914306641
 }
