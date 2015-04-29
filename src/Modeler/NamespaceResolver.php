@@ -1,7 +1,6 @@
 <?php
 namespace Helmich\Graphizer\Modeler;
 
-use Everyman\Neo4j\Cypher\Query;
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Writer\Bulk;
 
@@ -32,7 +31,6 @@ class NamespaceResolver {
 	}
 
 	private function treatNamespacedNodes() {
-		$client     = $this->backend->getClient();
 		$cypher     =
 			'MATCH          (ns:Stmt_Namespace)
 			 OPTIONAL MATCH (ns)-[:SUB_STMTS]->(s)-->(:Stmt_Use)-->()-->(u:Stmt_UseUse)
@@ -46,9 +44,6 @@ class NamespaceResolver {
 			'MATCH (ns)-[:SUB_STMTS]->()-[*..]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
 		$nameQuery  = $this->backend->createQuery($nameCypher, 'name');
 
-//		$tr = $client->beginTransaction();
-
-//		$bulk = new Bulk($this->backend);
 		$readBulk = new Bulk($this->backend);
 		$writeBulk = new Bulk($this->backend);
 
@@ -66,44 +61,15 @@ class NamespaceResolver {
 				if (array_key_exists($nameString, $knownAliases)) {
 					$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
 					$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $knownAliases[$nameString]]);
-//					$bulk->push(
-//						"MATCH ({$id}) WHERE id({$id})={node} SET {$id}.fullName={fullname}",
-//						['fullname' => $knownAliases[$nameString], 'node' => $name->getId()]
-//					);
-//					$tr->addStatements(
-//						new Query(
-//							$client,
-//							'MATCH (n) WHERE id(n)={node} SET n.fullName={fullname}',
-//							['fullname' => $knownAliases[$nameString], 'node' => $name->getId()]
-//						)
-//					);
-//					$name->setProperty('fullName', $knownAliases[$nameString]);
-//					$name->save();
 				} else {
 					if ($namespace->getProperty('name')) {
 						$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
 						$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $namespace->getProperty('name'). '\\' . $nameString]);
-//						$bulk->push(
-//							"MATCH ({$id}) WHERE id({$id})={node} SET {$id}.fullName={fullname}",
-//							['fullname' => $namespace->getProperty('name'). '\\' . $nameString, 'node' => $name->getId()]
-//						);
-//						$tr->addStatements(
-//							new Query(
-//								$client,
-//								'MATCH (n) WHERE id(n)={node} SET n.fullName={fullname}',
-//								['fullname' => $namespace->getProperty('name'). '\\' . $nameString, 'node' => $name->getId()]
-//							)
-//						);
-						$name->setProperty('fullName', $namespace->getProperty('name') . '\\' . $nameString);
-						$name->save();
 					}
 				}
 			}
 		}
 
 		$readBulk->merge($writeBulk)->evaluate();
-
-//		$bulk->evaluate();
-//		$tr->commit();
 	}
 }
