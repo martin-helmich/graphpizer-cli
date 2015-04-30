@@ -3,9 +3,12 @@ namespace Helmich\Graphizer\Exporter\Code;
 
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Reader\NodeReaderInterface;
+use Helmich\Graphizer\Utility\ObservableTrait;
 use PhpParser\PrettyPrinterAbstract;
 
 class PhpExporter {
+
+	use ObservableTrait;
 
 	/**
 	 * @var NodeReaderInterface
@@ -22,19 +25,14 @@ class PhpExporter {
 	 */
 	private $printer;
 
-	/**
-	 * @var callable[]
-	 */
-	private $listeners = [];
-
 	public function __construct(NodeReaderInterface $nodeReader, Backend $backend, PrettyPrinterAbstract $printer) {
 		$this->nodeReader = $nodeReader;
 		$this->backend    = $backend;
 		$this->printer    = $printer;
 	}
 
-	public function addExportFileListener(callable $listener) {
-		$this->listeners[] = $listener;
+	public function addFileWrittenListener(callable $listener) {
+		$this->addListener('fileWritten', $listener);
 	}
 
 	public function export($targetDirectory) {
@@ -49,13 +47,7 @@ class PhpExporter {
 			mkdir($dirname, 0777, TRUE);
 			file_put_contents($filename, $out);
 
-			$this->notify($filename);
-		}
-	}
-
-	private function notify($filename) {
-		foreach ($this->listeners as $listener) {
-			call_user_func($listener, $filename);
+			$this->notify('fileWritten', $filename);
 		}
 	}
 }

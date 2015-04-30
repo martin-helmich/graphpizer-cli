@@ -24,7 +24,7 @@ class ImportService {
 		$fileWriter = (new FileWriterBuilder($this->backend))->build();
 
 		if (NULL !== $debugCallback) {
-			$fileWriter->setDebugListener($debugCallback);
+			$fileWriter->addFileReadListener($debugCallback);
 		}
 
 		foreach ($sourceFiles as $path) {

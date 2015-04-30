@@ -23,14 +23,26 @@ class ExportCodeCommand extends AbstractCommand {
 
 		$nodeReader = (new NodeReaderBuilder($backend))->build();
 
+		$count    = 0;
 		$exporter = new PhpExporter($nodeReader, $backend, new Standard());
+		$exporter->addFileWrittenListener(
+			function () use (&$count) {
+				$count++;
+			}
+		);
 
 		if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-			$exporter->addExportFileListener(function($filename) use ($output) {
-				$output->writeln('Writing file <comment>' . $filename . '</comment>');
-			});
+			$exporter->addFileWrittenListener(
+				function ($filename) use ($output) {
+					$output->writeln('Writing file <comment>' . $filename . '</comment>');
+				}
+			);
 		}
 
 		$exporter->export($targetDir);
+
+		if ($output->getVerbosity() >= OutputInterface::VERBOSITY_NORMAL) {
+			$output->writeln('Wrote <comment>' . $count . '</comment> files');
+		}
 	}
 }

@@ -2,9 +2,12 @@
 namespace Helmich\Graphizer\Writer;
 
 use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Utility\ObservableTrait;
 use PhpParser\Parser;
 
 class FileWriter {
+
+	use ObservableTrait;
 
 	/**
 	 * @var NodeWriterInterface
@@ -21,21 +24,14 @@ class FileWriter {
 	 */
 	private $backend;
 
-	/**
-	 * @var callable
-	 */
-	private $debugListener;
-
 	public function __construct(Backend $backend, NodeWriterInterface $nodeWriter, Parser $parser) {
 		$this->nodeWriter    = $nodeWriter;
 		$this->parser        = $parser;
 		$this->backend       = $backend;
-		$this->debugListener = function ($file) {
-		};
 	}
 
-	public function setDebugListener(callable $debugListener) {
-		$this->debugListener = $debugListener;
+	public function addFileReadListener(callable $debugListener) {
+		$this->addListener('fileRead', $debugListener);
 	}
 
 	public function readDirectory($directory) {
@@ -44,18 +40,20 @@ class FileWriter {
 		$regexIterator = new \RegexIterator($iteratorIterator, '/^(.*)\.php[345]?$/', \RecursiveRegexIterator::GET_MATCH);
 
 		foreach($regexIterator as $fileInfo) {
-			$this->readFile($fileInfo[0]);
+			$this->readFile($fileInfo[0], $directory);
 		}
 	}
 
-	public function readFile($filename) {
-		call_user_func($this->debugListener, $filename);
+	public function readFile($filename, $baseDirectory) {
+		$this->notify('fileRead', $filename);
 
 		$code = file_get_contents($filename);
 		$ast  = $this->parser->parse($code);
 
+		$relativeFilename = ltrim(substr($filename, strlen($baseDirectory)), '/\\');
+
 		$collectionNode = $this->nodeWriter->writeNodeCollection($ast);
-		$collectionNode->setProperty('filename', $filename);
+		$collectionNode->setProperty('filename', $relativeFilename);
 		$collectionNode->save();
 
 		$this->backend->labelNode($collectionNode, 'File');
