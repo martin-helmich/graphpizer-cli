@@ -29,7 +29,7 @@ class ImportService {
 
 		foreach ($sourceFiles as $path) {
 			if (is_file($path)) {
-				$fileWriter->readFile($path);
+				$fileWriter->readFile($path, dirname($path));
 			} else {
 				$fileWriter->readDirectory($path);
 			}

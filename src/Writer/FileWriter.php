@@ -44,13 +44,13 @@ class FileWriter {
 		}
 	}
 
-	public function readFile($filename, $baseDirectory) {
+	public function readFile($filename, $baseDirectory = NULL) {
 		$this->notify('fileRead', $filename);
 
 		$code = file_get_contents($filename);
 		$ast  = $this->parser->parse($code);
 
-		$relativeFilename = ltrim(substr($filename, strlen($baseDirectory)), '/\\');
+		$relativeFilename = $baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
 
 		$collectionNode = $this->nodeWriter->writeNodeCollection($ast);
 		$collectionNode->setProperty('filename', $relativeFilename);
