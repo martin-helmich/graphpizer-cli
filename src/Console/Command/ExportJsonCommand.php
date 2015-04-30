@@ -1,7 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
-use Helmich\Graphizer\Exporter\JsonExporter;
+use Helmich\Graphizer\Exporter\Graph\JsonExporter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;

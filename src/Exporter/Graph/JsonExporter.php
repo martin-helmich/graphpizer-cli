@@ -1,5 +1,5 @@
 <?php
-namespace Helmich\Graphizer\Exporter;
+namespace Helmich\Graphizer\Exporter\Graph;
 
 use Everyman\Neo4j\Label;
 use Helmich\Graphizer\Persistence\Backend;
@@ -53,9 +53,14 @@ class JsonExporter implements ExporterInterface {
 			];
 		}
 
+		$flags = 0;
+		if ($pretty) {
+			$flags = JSON_PRETTY_PRINT;
+		}
+
 		return json_encode([
 			'nodes' => $nodes,
 			'edges' => $edges
-		]);
+		], $flags);
 	}
 }
