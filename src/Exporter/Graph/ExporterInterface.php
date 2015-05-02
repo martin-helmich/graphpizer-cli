@@ -1,5 +1,5 @@
 <?php
-namespace Helmich\Graphizer\Exporter;
+namespace Helmich\Graphizer\Exporter\Graph;
 
 interface ExporterInterface {
 

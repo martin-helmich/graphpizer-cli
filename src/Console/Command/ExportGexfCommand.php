@@ -1,7 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
-use Helmich\Graphizer\Exporter\GexfExporter;
+use Helmich\Graphizer\Exporter\Graph\GexfExporter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
