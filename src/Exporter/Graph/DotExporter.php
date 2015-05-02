@@ -20,9 +20,15 @@
 
 namespace Helmich\Graphizer\Exporter\Graph;
 
-use Everyman\Neo4j\Label;
+use Helmich\Graphizer\Exporter\Graph\Dot\RenderingStrategy;
 use Helmich\Graphizer\Persistence\Backend;
 
+/**
+ * Exports a model into a DOT format file.
+ *
+ * @package    Helmich\Graphizer
+ * @subpackage Exporter\Graph
+ */
 class DotExporter implements ExporterInterface {
 
 	/**
@@ -30,12 +36,14 @@ class DotExporter implements ExporterInterface {
 	 */
 	private $backend;
 
-	public function __construct(Backend $backend) {
-		$this->backend = $backend;
-	}
+	/**
+	 * @var RenderingStrategy
+	 */
+	private $strategy;
 
-	private function quoteIdentifier($id) {
-		return '"' . str_replace('"', '\\"', $id) . '"';
+	public function __construct(Backend $backend, RenderingStrategy $strategy) {
+		$this->backend  = $backend;
+		$this->strategy = $strategy;
 	}
 
 	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE) {
@@ -43,17 +51,16 @@ class DotExporter implements ExporterInterface {
 
 		$q = $this->backend->createQuery('MATCH c WHERE c:Class OR c:Interface OR c:Trait RETURN c', 'c');
 		foreach ($q->execute() as $node) {
-			$output .= "    {$this->quoteIdentifier($node->getProperty('fqcn'))};\n";
+			$output .= '    ' . $this->strategy->renderClassLikeNode($node) . ";\n";
 		}
 
-		$q =
-			$this->backend->createQuery('
-				MATCH (a)-[r]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN a, b, r UNION
-				MATCH (a)-[r]->(t:Type)-[:IS]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN a, b, r'
-			);
+		$q = $this->backend->createQuery(
+			'MATCH (a)-[r]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN a, b, r UNION
+			 MATCH (a)-[r]->(t:Type)-[:IS]->(b) WHERE (a:Class OR a:Interface OR a:Trait) AND (b:Class OR b:Interface OR b:Trait) RETURN a, b, r'
+		);
 		foreach ($q->execute() as $row) {
-			$r       = $row->relationship('r');
-			$output .= "    {$this->quoteIdentifier($r->getStartNode()->getProperty('fqcn'))} -> {$this->quoteIdentifier($r->getEndNode()->getProperty('fqcn'))} [label=\"{$r->getType()}\"];\n";
+			$r = $row->relationship('r');
+			$output .= '    ' . $this->strategy->renderRelationship($r) . ";\n";
 		}
 
 		$output .= "}";
