@@ -20,6 +20,7 @@
 
 namespace Helmich\Graphizer\Exporter\Graph\Dot;
 
+use Everyman\Neo4j\Label;
 use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Relationship;
 
@@ -29,9 +30,25 @@ class CompactRenderingStrategy implements RenderingStrategy {
 
 	public function renderClassLikeNode(Node $node) {
 		return sprintf(
-			'%s [label="", shape=circle]',
-			$this->quoteIdentifier($node->getProperty('fqcn'))
+			'%s [label="%s", shape=circle]',
+			$this->quoteIdentifier($node->getProperty('fqcn')),
+			$this->classLabel($node)
 		);
+	}
+
+	private function classLabel(Node $node) {
+		/** @var Label $label */
+		foreach ($node->getLabels() as $label) {
+			if ($label->getName() === 'Class') {
+				return 'C';
+			} else if ($label->getName() === 'Trait') {
+				return 'T';
+			} else if ($label->getName() === 'Interface') {
+				return 'I';
+			}
+		}
+
+		return '';
 	}
 
 	public function renderRelationship(Relationship $relationship) {
