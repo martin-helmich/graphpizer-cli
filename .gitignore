@@ -5,3 +5,6 @@
 # Composer-related
 /vendor/
 /composer.lock
+
+# Build-related
+/build/

@@ -20,7 +20,8 @@
         "symfony/console": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "*"
+        "phpunit/phpunit": "*",
+        "phing/phing": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

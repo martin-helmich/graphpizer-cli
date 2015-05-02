@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="graphizer" default="all">
+
+    <target name="prepare">
+        <mkdir dir="build" description="Create build directory" />
+    </target>
+
+    <target name="tests-functional" depends="prepare">
+        <echo msg="Running functional tests" />
+        <phpunit bootstrap="tests/Functional/bootstrap.php" printsummary="true">
+            <formatter todir="build/reports" outfile="functional.xml" type="xml"/>
+            <formatter type="plain" usefile="false"/>
+            <batchtest>
+                <fileset dir="tests/Functional">
+                    <include name="**/*Test.php"/>
+                    <exclude name="**/Abstract*.php"/>
+                </fileset>
+            </batchtest>
+        </phpunit>
+    </target>
+
+    <target name="tests" depends="tests-functional">
+    </target>
+
+    <target name="all" depends="tests">
+    </target>
+</project>
