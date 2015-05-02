@@ -8,11 +8,6 @@ use Everyman\Neo4j\Query\ResultSet;
 
 class PreparedStatement {
 
-	/**
-	 * @var Client
-	 */
-	private $client;
-
 	private $cypher;
 
 	/**
@@ -25,25 +20,37 @@ class PreparedStatement {
 	 */
 	private $debugger;
 
+	/**
+	 * @var callable
+	 */
+	private $queryFactory;
+
 	public function __construct(Client $client, $cypher, $resultVar = NULL, DebuggerInterface $debugger = NULL) {
-		$this->client = $client;
-		$this->cypher = $cypher;
+		$this->cypher    = $cypher;
 		$this->resultVar = $resultVar;
-		$this->debugger = $debugger ? $debugger : new NullDebugger();
+		$this->debugger  = $debugger ? $debugger : new NullDebugger();
+
+		$this->queryFactory = function (array $parameters) use ($client, $cypher) {
+			return new Query($client, $cypher, $parameters);
+		};
+	}
+
+	public function setQueryFactory(callable $factory) {
+		$this->queryFactory = $factory;
 	}
 
 	/**
 	 * @param array $parameters
 	 * @return ResultSet|TypedResultRowAdapter[]|\Everyman\Neo4j\Node[]
 	 */
-	public function execute(array $parameters=[]) {
+	public function execute(array $parameters = []) {
 		foreach ($parameters as $key => $value) {
 			if ($value instanceof Node) {
 				$parameters[$key] = $value->getId();
 			}
 		}
 
-		$query = new Query($this->client, $this->cypher, $parameters);
+		$query  = call_user_func($this->queryFactory, $parameters);
 		$result = new TypedResultSetProxy($query->getResultSet());
 
 		$this->debugger->queryExecuted($this->cypher, $parameters);

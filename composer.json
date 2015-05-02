@@ -21,7 +21,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "*",
-        "phing/phing": "*"
+        "phing/phing": "*",
+        "fzaninotto/faker": "~1.5"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
