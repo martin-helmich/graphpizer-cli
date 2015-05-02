@@ -35,7 +35,7 @@ class ClassModelGeneratorTest extends AbstractFunctionalTestCase {
 	 * @test
 	 * @medium
 	 */
-	public function classesAreLoaded() {
+	public function shouldLoadClasses() {
 		$this->assertCypherQueryReturnsCount(
 			1,
 			'MATCH (c1:Class) WHERE c1.fqcn="SpokenGreeter"
@@ -49,7 +49,7 @@ class ClassModelGeneratorTest extends AbstractFunctionalTestCase {
 	 * @test
 	 * @medium
 	 */
-	public function propertiesAreLoaded() {
+	public function shouldLoadProperties() {
 		$this->assertCypherQueryReturnsCount(
 			2,
 			'MATCH (spoken:Class)-[:HAS_PROPERTY]->(p:Property) WHERE spoken.fqcn="SpokenGreeter"
@@ -61,7 +61,7 @@ class ClassModelGeneratorTest extends AbstractFunctionalTestCase {
 	 * @test
 	 * @medium
 	 */
-	public function methodsAreLoaded() {
+	public function shouldLoadMethods() {
 		$this->assertCypherQueryReturnsCount(
 			2,
 			'MATCH (spoken:Class)-[:HAS_METHOD]->(m:Method) WHERE spoken.fqcn="SpokenGreeter"
@@ -73,7 +73,7 @@ class ClassModelGeneratorTest extends AbstractFunctionalTestCase {
 	 * @test
 	 * @medium
 	 */
-	public function interfacesAreLoaded() {
+	public function shouldLoadInterfaces() {
 		$this->assertCypherQueryReturnsCount(
 			1,
 			'MATCH (sayer:Interface) WHERE sayer.fqcn="Sayer"
@@ -86,10 +86,52 @@ class ClassModelGeneratorTest extends AbstractFunctionalTestCase {
 	 * @test
 	 * @medium
 	 */
-	public function implementationsAreLoaded() {
+	public function shouldLoadTraits() {
+		$this->assertCypherQueryReturnsCount(1, 'MATCH (a:Trait) WHERE a.fqcn="PrintTrait" RETURN a');
+	}
+
+	/**
+	 * @test
+	 * @medium
+	 */
+	public function shouldLoadInterfaceImplementations() {
 		$this->assertCypherQueryReturnsCount(
 			1,
 			'MATCH (gg:Class)-[:IMPLEMENTS]->(g:Interface) WHERE gg.fqcn="GermanGreeter" AND g.fqcn="Greeter" RETURN gg'
+		);
+	}
+
+	/**
+	 * @test
+	 * @medium
+	 */
+	public function shouldLoadTraitUsages() {
+		$this->assertCypherQueryReturnsCount(1, 'MATCH (c:Class)-[:USES_TRAIT]->(t:Trait) WHERE c.fqcn="DefaultSayer" AND t.fqcn="PrintTrait" RETURN c, t');
+	}
+
+	/**
+	 * @test
+	 * @medium
+	 */
+	public function shouldBeIdempotent() {
+		$this->modelBuilder->run();
+
+		$this->assertCypherQueryReturnsCount(
+			1,
+			'MATCH (c1:Class) WHERE c1.fqcn="SpokenGreeter"
+			 MATCH (c2:Class) WHERE c2.fqcn="DefaultSayer"
+			 MATCH (c3:Class) WHERE c3.fqcn="GermanGreeter"
+			 RETURN c1, c2, c3'
+		);
+		$this->assertCypherQueryReturnsCount(
+			2,
+			'MATCH (spoken:Class)-[:HAS_METHOD]->(m:Method) WHERE spoken.fqcn="SpokenGreeter"
+			 RETURN m'
+		);
+		$this->assertCypherQueryReturnsCount(
+			2,
+			'MATCH (spoken:Class)-[:HAS_PROPERTY]->(p:Property) WHERE spoken.fqcn="SpokenGreeter"
+			 RETURN p'
 		);
 	}
 }

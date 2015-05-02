@@ -18,10 +18,18 @@ interface Sayer {
 	public function say($what);
 }
 
+trait PrintTrait {
+	public function write($str) {
+		echo $str;
+	}
+}
+
 class DefaultSayer implements Sayer {
 
+	use PrintTrait;
+
 	public function say($what) {
-		echo $what;
+		$this->write($what);
 	}
 }
 

@@ -28,16 +28,21 @@ class VerboseRenderingStrategy implements RenderingStrategy {
 	use EdgeRenderer;
 
 	public function renderClassLikeNode(Node $node) {
-		return $this->quoteIdentifier($node->getProperty('fqcn'));
+		return sprintf(
+			'%s [label="%s"]',
+			$this->quoteIdentifier($node->getProperty('fqcn')),
+			str_replace('\\', '\\\\', $node->getProperty('fqcn'))
+		);
 	}
 
 	public function renderRelationship(Relationship $relationship) {
 		return sprintf(
-			'%s -> %s [label="%s", arrowhead=%s]',
+			'%s -> %s [label="%s", arrowhead=%s, style=%s]',
 			$this->quoteIdentifier($relationship->getStartNode()->getProperty('fqcn')),
 			$this->quoteIdentifier($relationship->getEndNode()->getProperty('fqcn')),
 			$relationship->getType(),
-			$this->getEdgeShape($relationship)
+			$this->getArrowheadShape($relationship),
+			$this->getLineStyle($relationship)
 		);
 	}
 

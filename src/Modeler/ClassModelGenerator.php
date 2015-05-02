@@ -41,48 +41,74 @@ class ClassModelGenerator {
 		$this->consolidateTypesWithClasses();
 		$this->findClassExtensions();
 		$this->findInterfaceImplementations();
+		$this->findTraitUsages();
 		$this->findMethodImplementations();
 	}
 
 	private function consolidateTypesWithClasses() {
-		$this->backend->execute('MATCH (t:Type), (c) WHERE t.name = c.fqcn AND (c:Class OR c:Interface) MERGE (t)-[:IS]->(c)');
+		$this->backend->execute(
+			'MATCH (t:Type), (c) WHERE t.name = c.fqcn AND (c:Class OR c:Interface) MERGE (t)-[:IS]->(c)'
+		);
+	}
+
+	private function findTraitUsages() {
+		$this->backend->execute(
+			'MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_STMTS]->()-[:HAS]->(:Stmt_TraitUse)-[:SUB_TRAITS]->()-[:HAS]->(tname)
+			 MATCH (t:Trait) WHERE t.fqcn = tname.fullName
+			 MERGE (c)-[:USES_TRAIT]->(t)'
+		);
 	}
 
 	private function findInterfaceImplementations() {
 		$this->backend->execute(
-			'
-			MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_IMPLEMENTS]->()-[:HAS]->(iname)
-			MATCH (i:Interface) WHERE i.fqcn=iname.fullName
-			MERGE (c)-[:IMPLEMENTS]->(i)'
+			'MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_IMPLEMENTS]->()-[:HAS]->(iname)
+			 MATCH (i:Interface) WHERE i.fqcn=iname.fullName
+			 MERGE (c)-[:IMPLEMENTS]->(i)'
 		);
 	}
 
-	private function findMethodImplementations(){
-		$this->backend->execute('
-			MATCH (m:Method)<-[:HAS_METHOD]-()-[:IMPLEMENTS]->()-[:HAS_METHOD]->(s) WHERE m.name=s.name
-			MERGE (m)-[:IMPLEMENTS_METHOD]->(s)');
-		$this->backend->execute('
-			MATCH (m:Method)<-[:HAS_METHOD]-()-[:EXTENDS]->()-[:HAS_METHOD]->(s) WHERE m.name=s.name AND m.abstract=true
-			MERGE (m)-[:IMPLEMENTS_METHOD]->(s)');
-		$this->backend->execute('
-			MATCH (m:Method)<-[:HAS_METHOD]-()-[:EXTENDS]->()-[:HAS_METHOD]->(s) WHERE m.name=s.name AND m.abstract=false
-			MERGE (m)-[:OVERRIDES_METHOD]->(s)');
+	private function findMethodImplementations() {
+		$this->backend->execute(
+			'MATCH (m:Method)<-[:HAS_METHOD]-()-[:IMPLEMENTS]->()-[:HAS_METHOD]->(s) WHERE m.name=s.name
+			 MERGE (m)-[:IMPLEMENTS_METHOD]->(s)'
+		);
+		$this->backend->execute(
+			'MATCH (m:Method)<-[:HAS_METHOD]-()-[:EXTENDS]->()-[:HAS_METHOD]->(s) WHERE m.name=s.name AND m.abstract=true
+			 MERGE (m)-[:IMPLEMENTS_METHOD]->(s)'
+		);
+		$this->backend->execute(
+			'MATCH (m:Method)<-[:HAS_METHOD]-()-[:EXTENDS]->()-[:HAS_METHOD]->(s) WHERE m.name=s.name AND m.abstract=false
+			 MERGE (m)-[:OVERRIDES_METHOD]->(s)'
+		);
 	}
 
 	private function findClassExtensions() {
-		$this->backend->execute('
-			MATCH (sub:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_EXTENDS]->(ename)
-			MATCH (super:Class) WHERE super.fqcn=ename.fullName
-			MERGE (sub)-[:EXTENDS]->(super)
-		');
+		$this->backend->execute(
+			'MATCH (sub:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_EXTENDS]->(ename)
+			 MATCH (super:Class) WHERE super.fqcn=ename.fullName
+			 MERGE (sub)-[:EXTENDS]->(super)
+		'
+		);
 	}
 
 	private function extractPropertiesForClass(Node $classNode, Node $classStmtNode) {
 		$cypher =
-			'START cls=node({cls}) MATCH (cls)-[*..]->(outer:Stmt_Property)-->()-->(inner:Stmt_PropertyProperty) RETURN outer, inner';
+			'START cls=node({def})
+			 MATCH (cls)-[*..]->(outer:Stmt_Property)-->()-->(inner:Stmt_PropertyProperty)
+			 OPTIONAL MATCH (inner)-[:SUB_DEFAULT]->(default)
+			 OPTIONAL MATCH (class)-[:HAS_PROPERTY]->(existing) WHERE id(class)={cls} AND existing.name=inner.name
+			 RETURN outer, inner, default, existing';
 		$query  = $this->backend->createQuery($cypher);
 
-		foreach ($query->execute(['cls' => $classStmtNode->getId()]) as $row) {
+		$cypher = 'MATCH (d) WHERE id(d)={definition}
+		           MATCH (c) WHERE id(c)={class}
+		           CREATE (p:Property {prop})
+		           MERGE (p)-[:DEFINED_IN]->(d)
+		           MERGE (c)-[:HAS_PROPERTY]->(p)
+		           RETURN p';
+		$create = $this->backend->createQuery($cypher);
+
+		foreach ($query->execute(['def' => $classStmtNode, 'cls' => $classNode]) as $row) {
 			$outerProperty = $row->node('outer');
 			$innerProperty = $row->node('inner');
 
@@ -92,21 +118,23 @@ class ClassModelGenerator {
 				'protected'  => ($outerProperty->getProperty('type') & Class_::MODIFIER_PROTECTED) > 0,
 				'static'     => ($outerProperty->getProperty('type') & Class_::MODIFIER_STATIC) > 0,
 				'name'       => $innerProperty->getProperty('name'),
-				'docComment' => $outerProperty->getProperty('docComment'),
 			];
 
-			$property = $this->backend->createNode($properties, 'Property');
-			$property
-				->relateTo($outerProperty, 'DEFINED_IN')
-				->save();
+			if ($outerProperty->getProperty('docComment')) {
+				$properties['docComment'] = $outerProperty->getProperty('docComment');
+			}
 
-			$classNode
-				->relateTo($property, 'HAS_PROPERTY')
-				->save();
+			if (!$row['existing']) {
+				$result = $create->execute(['prop' => $properties, 'definition' => $classStmtNode, 'class' => $classNode]);
+				$property = $result[0]->node('p');
+			} else {
+				$property = $row->node('existing');
+				$property->setProperties($properties);
+				$property->save();
+			}
 
-			$defaultValueRelation = $innerProperty->getFirstRelationship('SUB_DEFAULT');
-			if ($defaultValueRelation !== NULL) {
-				$defaultValueNode = $defaultValueRelation->getEndNode();
+			if ($row['default']) {
+				$defaultValueNode = $row->node('default');
 
 				/** @var Label[] $labels */
 				$labels = $defaultValueNode->getLabels();
@@ -136,6 +164,21 @@ class ClassModelGenerator {
 		$cypher = 'MATCH (cls)-[:SUB_STMTS]->()-->(m:Stmt_ClassMethod) WHERE id(cls)={cls} RETURN m';
 		$query  = $this->backend->createQuery($cypher, 'm');
 
+		$cypher = 'MATCH (d) WHERE id(d)={definition}
+		           MATCH (c) WHERE id(c)={class}
+		           MERGE (m:Method {
+		               public: {method}.public,
+		               private: {method}.private,
+		               protected: {method}.protected,
+		               static: {method}.static,
+		               abstract: {method}.abstract,
+		               name: {method}.name
+		           })
+		           MERGE (m)-[:DEFINED_IN]->(d)
+		           MERGE (c)-[:HAS_METHOD]->(m)
+		           RETURN m';
+		$create = $this->backend->createQuery($cypher);
+
 		foreach ($query->execute(['cls' => $classStmtNode->getId()]) as $methodStmt) {
 			/** @var Node $methodStmt */
 			$properties = [
@@ -146,9 +189,12 @@ class ClassModelGenerator {
 				'abstract'  => ($methodStmt->getProperty('type') & Class_::MODIFIER_ABSTRACT) > 0,
 				'name'      => $methodStmt->getProperty('name')
 			];
-			$method     = $this->backend->createNode($properties, 'Method');
-			$method->relateTo($methodStmt, 'DEFINED_IN')->save();
-			$classNode->relateTo($method, 'HAS_METHOD')->save();
+//			$method     = $this->backend->createNode($properties, 'Method');
+//			$method->relateTo($methodStmt, 'DEFINED_IN')->save();
+//			$classNode->relateTo($method, 'HAS_METHOD')->save();
+
+			$result = $create->execute(['method' => $properties, 'definition' => $classStmtNode, 'class' => $classNode]);
+			$method = $result[0]->node('m');
 
 			$this->enrichNodeFromDocBlock($method, $methodStmt->getProperty('docComment'));
 		}
@@ -156,13 +202,20 @@ class ClassModelGenerator {
 
 	private function enrichNodeFromDocBlock(Node $node, $docblock) {
 		$phpdoc = new DocBlock($docblock);
+		$dirty = FALSE;
 
 		if (empty($phpdoc->getShortDescription()) === FALSE) {
 			$node->setProperty('shortDescription', $phpdoc->getShortDescription());
+			$dirty = TRUE;
 		}
 
 		if (empty($phpdoc->getLongDescription()) === FALSE) {
 			$node->setProperty('longDescription', $phpdoc->getLongDescription()->getContents());
+			$dirty = TRUE;
+		}
+
+		if ($dirty) {
+			$node->save();
 		}
 
 		if ($phpdoc->hasTag('var')) {
@@ -287,23 +340,35 @@ class ClassModelGenerator {
 		$cls = $row->node('cls');
 		$ns  = $row->node('ns');
 
-		$properties = [
-			'name'      => $cls->getProperty('name'),
-			'namespace' => NULL,
-			'fqcn'      => $cls->getProperty('name'),
-			'abstract'  => ($cls->getProperty('type') & Class_::MODIFIER_ABSTRACT) > 0,
-			'final'     => ($cls->getProperty('type') & Class_::MODIFIER_FINAL) > 0
+		$arguments = [
+			'definition' => $cls->getId(),
+			'name'       => $cls->getProperty('name'),
+			'namespace'  => NULL,
+			'fqcn'       => $cls->getProperty('name'),
+			'abstract'   => ($cls->getProperty('type') & Class_::MODIFIER_ABSTRACT) > 0,
+			'final'      => ($cls->getProperty('type') & Class_::MODIFIER_FINAL) > 0
 		];
 
 		if ($ns) {
-			$properties['namespace'] = $ns->getProperty('name');
-			$properties['fqcn']      = $ns->getProperty('name') . '\\' . $cls->getProperty('name');
+			$arguments['namespace'] = $ns->getProperty('name');
+			$arguments['fqcn']      = $ns->getProperty('name') . '\\' . $cls->getProperty('name');
 		}
 
-		$class = $this->backend->createNode($properties, ucfirst($row['type']));
-		$class
-			->relateTo($cls, 'DEFINED_IN')
-			->save();
+		$label = ucfirst($row['type']);
+		$q     = $this->backend->createQuery(
+			"MATCH (d) WHERE id(d)={definition}
+			 MERGE (c:{$label} {name: {name}, " . ($ns ? "namespace: {namespace}, " : "") . "fqcn: {fqcn}, abstract: {abstract}, final: {final}})
+			 MERGE (c)-[:DEFINED_IN]->(d)
+			 RETURN c"
+		);
+
+//		$class = $this->backend->createNode($properties, ucfirst($row['type']));
+//		$class
+//			->relateTo($cls, 'DEFINED_IN')
+//			->save();
+
+		$result = $q->execute($arguments);
+		$class  = $result[0]->node('c');
 
 		if ($row['type'] !== 'interface') {
 			$this->extractPropertiesForClass($class, $cls);

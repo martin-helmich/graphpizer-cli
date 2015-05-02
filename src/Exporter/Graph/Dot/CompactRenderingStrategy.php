@@ -53,10 +53,11 @@ class CompactRenderingStrategy implements RenderingStrategy {
 
 	public function renderRelationship(Relationship $relationship) {
 		return sprintf(
-			'%s -> %s [label="", arrowhead=%s]',
+			'%s -> %s [label="", arrowhead=%s, style=%s]',
 			$this->quoteIdentifier($relationship->getStartNode()->getProperty('fqcn')),
 			$this->quoteIdentifier($relationship->getEndNode()->getProperty('fqcn')),
-			$this->getEdgeShape($relationship)
+			$this->getArrowheadShape($relationship),
+			$this->getLineStyle($relationship)
 		);
 	}
 

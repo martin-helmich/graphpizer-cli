@@ -24,11 +24,21 @@ use Everyman\Neo4j\Relationship;
 
 trait EdgeRenderer {
 
-	public function getEdgeShape(Relationship $edge) {
+	public function getLineStyle(Relationship $edge) {
+		switch ($edge->getType()) {
+			case 'USES_TRAIT':
+				return 'dashed';
+			default:
+				return 'solid';
+		}
+	}
+
+	public function getArrowheadShape(Relationship $edge) {
 		switch ($edge->getType()) {
 			case 'IMPLEMENTS':
 				return 'onormal';
 			case 'EXTENDS':
+			case 'USES_TRAIT':
 				return 'normal';
 			default:
 				return 'vee';
