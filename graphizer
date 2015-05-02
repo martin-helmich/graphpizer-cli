@@ -21,6 +21,7 @@
 
 use Helmich\Graphizer\Console\Application;
 use Helmich\Graphizer\Console\Command\ExportCodeCommand;
+use Helmich\Graphizer\Console\Command\ExportDotCommand;
 use Helmich\Graphizer\Console\Command\ExportGexfCommand;
 use Helmich\Graphizer\Console\Command\ExportJsonCommand;
 use Helmich\Graphizer\Console\Command\GenerateModelCommand;
@@ -49,5 +50,6 @@ $app->add($commandBuilder->build(PruneCommand::class));
 $app->add($commandBuilder->build(GenerateModelCommand::class));
 $app->add($commandBuilder->build(ExportGexfCommand::class));
 $app->add($commandBuilder->build(ExportJsonCommand::class));
+$app->add($commandBuilder->build(ExportDotCommand::class));
 $app->add($commandBuilder->build(ExportCodeCommand::class));
 $app->run();
