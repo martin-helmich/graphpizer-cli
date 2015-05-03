@@ -50,6 +50,8 @@ class PreparedStatement {
 			}
 		}
 
+		$this->debugger->queryExecuting($this->cypher, $parameters);
+
 		$query  = call_user_func($this->queryFactory, $parameters);
 		$result = new TypedResultSetProxy($query->getResultSet());
 

@@ -243,9 +243,10 @@ class ClassModelGenerator {
 				$dataTypeNode =
 					$this->getTypeNode($dataType, $imports, $namespace ? $namespace->getProperty('name') : NULL);
 				if ($dataTypeNode !== NULL) {
-					$node
-						->relateTo($dataTypeNode, 'POSSIBLE_TYPE')
-						->save();
+					$cypher = 'MATCH (type) WHERE id(type)={type}
+					           MATCH (n) WHERE id(n)={node}
+					           MERGE (n)-[:POSSIBLE_TYPE]->(type)';
+					$this->backend->createQuery($cypher)->execute(['node' => $node, 'type' => $dataTypeNode]);
 				}
 			}
 		}

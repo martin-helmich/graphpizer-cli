@@ -27,6 +27,7 @@ trait EdgeRenderer {
 	public function getLineStyle(Relationship $edge) {
 		switch ($edge->getType()) {
 			case 'USES_TRAIT':
+			case 'USES':
 				return 'dashed';
 			default:
 				return 'solid';

@@ -48,6 +48,8 @@ class DotExporter implements ExporterInterface {
 
 	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE) {
 		$output = "digraph {\n";
+		$output .= "    overlap=false;\n";
+		$output .= "    splines=true;\n";
 
 		$q = $this->backend->createQuery('MATCH c WHERE c:Class OR c:Interface OR c:Trait RETURN c', 'c');
 		foreach ($q->execute() as $node) {
@@ -60,7 +62,7 @@ class DotExporter implements ExporterInterface {
 		);
 		foreach ($q->execute() as $row) {
 			$r = $row->relationship('r');
-			$output .= '    ' . $this->strategy->renderRelationship($r) . ";\n";
+			$output .= '    ' . $this->strategy->renderRelationship($r, $row->node('a'), $row->node('b')) . ";\n";
 		}
 
 		$output .= "}";

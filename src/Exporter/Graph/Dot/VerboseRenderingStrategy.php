@@ -35,11 +35,11 @@ class VerboseRenderingStrategy implements RenderingStrategy {
 		);
 	}
 
-	public function renderRelationship(Relationship $relationship) {
+	public function renderRelationship(Relationship $relationship, Node $start, Node $end) {
 		return sprintf(
 			'%s -> %s [label="%s", arrowhead=%s, style=%s]',
-			$this->quoteIdentifier($relationship->getStartNode()->getProperty('fqcn')),
-			$this->quoteIdentifier($relationship->getEndNode()->getProperty('fqcn')),
+			$this->quoteIdentifier($start->getProperty('fqcn')),
+			$this->quoteIdentifier($end->getProperty('fqcn')),
 			$relationship->getType(),
 			$this->getArrowheadShape($relationship),
 			$this->getLineStyle($relationship)

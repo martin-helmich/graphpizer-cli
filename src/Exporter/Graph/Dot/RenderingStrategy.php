@@ -27,5 +27,5 @@ interface RenderingStrategy {
 
 	public function renderClassLikeNode(Node $node);
 
-	public function renderRelationship(Relationship $relationship);
+	public function renderRelationship(Relationship $relationship, Node $start, Node $end);
 }

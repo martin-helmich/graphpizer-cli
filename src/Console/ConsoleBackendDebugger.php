@@ -11,6 +11,8 @@ class ConsoleBackendDebugger implements DebuggerInterface {
 	 */
 	private $output;
 
+	private $timer;
+
 	public function __construct(OutputInterface $output) {
 		$this->output = $output;
 	}
@@ -22,12 +24,31 @@ class ConsoleBackendDebugger implements DebuggerInterface {
 	}
 
 	public function queryExecuted($cypher, array $args) {
-		$this->output->writeln(
+		$time = microtime(TRUE) - $this->timer;
+		$this->output->writeln(sprintf("Took <info>%fms</info>", $time * 1000));
+//		$this->output->writeln(
+//			sprintf(
+//				'Executed Cypher query <comment>%s</comment> with args: <comment>%s</comment>',
+//				$cypher,
+//				json_encode($args)
+//			)
+//		);
+	}
+
+	public function queryExecuting($cypher, array $args) {
+		$this->output->write(
 			sprintf(
-				'Executed Cypher query <comment>%s</comment> with args: <comment>%s</comment>',
-				$cypher,
+				'Executing Cypher query <comment>%s</comment> with args <comment>%s</comment>... ',
+				$this->normalizeCypher($cypher),
 				json_encode($args)
 			)
 		);
+		$this->timer = microtime(TRUE);
+	}
+
+	private function normalizeCypher($cypher) {
+		$cypher = str_replace("\n", "", $cypher);
+		$cypher = preg_replace(',\s+,', ' ', $cypher);
+		return $cypher;
 	}
 }

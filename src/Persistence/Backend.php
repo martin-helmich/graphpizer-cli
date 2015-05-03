@@ -46,6 +46,7 @@ class Backend {
 	}
 
 	public function execute($cypher, array $args=[]) {
+		$this->debugger->queryExecuting($cypher, $args);
 		$query = new Query($this->client, $cypher, $args);
 		$this->client->executeCypherQuery($query);
 		$this->debugger->queryExecuted($cypher, $args);
