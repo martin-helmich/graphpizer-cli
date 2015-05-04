@@ -172,7 +172,8 @@ class ClassModelGenerator {
 		               protected: {method}.protected,
 		               static: {method}.static,
 		               abstract: {method}.abstract,
-		               name: {method}.name
+		               name: {method}.name,
+		               fullName: c.fqcn + "::" + {method}.name
 		           })
 		           MERGE (m)-[:DEFINED_IN]->(d)
 		           MERGE (c)-[:HAS_METHOD]->(m)
@@ -193,7 +194,7 @@ class ClassModelGenerator {
 //			$method->relateTo($methodStmt, 'DEFINED_IN')->save();
 //			$classNode->relateTo($method, 'HAS_METHOD')->save();
 
-			$result = $create->execute(['method' => $properties, 'definition' => $classStmtNode, 'class' => $classNode]);
+			$result = $create->execute(['method' => $properties, 'definition' => $methodStmt, 'class' => $classNode]);
 			$method = $result[0]->node('m');
 
 			$this->enrichNodeFromDocBlock($method, $methodStmt->getProperty('docComment'));
