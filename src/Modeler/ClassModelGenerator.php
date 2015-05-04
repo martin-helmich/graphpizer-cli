@@ -47,6 +47,10 @@ class ClassModelGenerator {
 
 	private function consolidateTypesWithClasses() {
 		$this->backend->execute(
+			'MATCH (c) WHERE (c:Class OR c:Interface OR c:Trait)
+			 MERGE (t:Type {name: c.fqcn, primitive: false})'
+		);
+		$this->backend->execute(
 			'MATCH (t:Type), (c) WHERE t.name = c.fqcn AND (c:Class OR c:Interface) MERGE (t)-[:IS]->(c)'
 		);
 	}
