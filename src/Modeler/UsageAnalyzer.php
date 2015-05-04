@@ -19,7 +19,7 @@ class UsageAnalyzer {
 		$this->backend->execute(
 			'MATCH (name)<-[:SUB_CLASS]-(new:Expr_New)<-[*..]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL
 			 MERGE (type:Type{name:name.fullName, primitive: false})
-			 MERGE (type)-[:INSTANTIATES]->(new)
+			 MERGE (type)<-[:INSTANTIATES]-(new)
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
 		);
 
