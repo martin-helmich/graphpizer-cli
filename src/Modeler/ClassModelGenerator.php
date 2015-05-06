@@ -57,7 +57,7 @@ class ClassModelGenerator {
 
 	private function findTraitUsages() {
 		$this->backend->execute(
-			'MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_STMTS]->()-[:HAS]->(:Stmt_TraitUse)-[:SUB_TRAITS]->()-[:HAS]->(tname)
+			'MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB {type: "stmts"}]->()-[:HAS]->(:Stmt_TraitUse)-[:SUB {type: "traits"}]->()-[:HAS]->(tname)
 			 MATCH (t:Trait) WHERE t.fqcn = tname.fullName
 			 MERGE (c)-[:USES_TRAIT]->(t)'
 		);
@@ -65,7 +65,7 @@ class ClassModelGenerator {
 
 	private function findInterfaceImplementations() {
 		$this->backend->execute(
-			'MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_IMPLEMENTS]->()-[:HAS]->(iname)
+			'MATCH (c:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB {type: "implements"}]->()-[:HAS]->(iname)
 			 MATCH (i:Interface) WHERE i.fqcn=iname.fullName
 			 MERGE (c)-[:IMPLEMENTS]->(i)'
 		);
@@ -88,7 +88,7 @@ class ClassModelGenerator {
 
 	private function findClassExtensions() {
 		$this->backend->execute(
-			'MATCH (sub:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB_EXTENDS]->(ename)
+			'MATCH (sub:Class)-[:DEFINED_IN]->(:Stmt_Class)-[:SUB {type: "extends"}]->(ename)
 			 MATCH (super:Class) WHERE super.fqcn=ename.fullName
 			 MERGE (sub)-[:EXTENDS]->(super)
 		'
@@ -99,7 +99,7 @@ class ClassModelGenerator {
 		$cypher =
 			'START cls=node({def})
 			 MATCH (cls)-[*..]->(outer:Stmt_Property)-->()-->(inner:Stmt_PropertyProperty)
-			 OPTIONAL MATCH (inner)-[:SUB_DEFAULT]->(default)
+			 OPTIONAL MATCH (inner)-[:SUB {type: "default"}]->(default)
 			 OPTIONAL MATCH (class)-[:HAS_PROPERTY]->(existing) WHERE id(class)={cls} AND existing.name=inner.name
 			 RETURN outer, inner, default, existing';
 		$query  = $this->backend->createQuery($cypher);
@@ -165,7 +165,7 @@ class ClassModelGenerator {
 	}
 
 	private function extractMethodsForClass(Node $classNode, Node $classStmtNode) {
-		$cypher = 'MATCH (cls)-[:SUB_STMTS]->()-->(m:Stmt_ClassMethod) WHERE id(cls)={cls} RETURN m';
+		$cypher = 'MATCH (cls)-[:SUB {type: "stmts"}]->()-->(m:Stmt_ClassMethod) WHERE id(cls)={cls} RETURN m';
 		$query  = $this->backend->createQuery($cypher, 'm');
 
 		$cypher = 'MATCH (d) WHERE id(d)={definition}
@@ -277,7 +277,7 @@ class ClassModelGenerator {
 		$cypher  =
 			'START n=node({node})
 			 MATCH (n)-[:DEFINED_IN]->()<-[*..]-(ns:Stmt_Namespace)
-			 MATCH (ns)-[:SUB_STMTS]->()-->(:Stmt_Use)-->()-->(use:Stmt_UseUse)
+			 MATCH (ns)-[:SUB {type: "stmts"}]->()-->(:Stmt_Use)-->()-->(use:Stmt_UseUse)
 			 RETURN use';
 		$query   = $this->backend->createQuery($cypher, 'use');
 		$imports = [];

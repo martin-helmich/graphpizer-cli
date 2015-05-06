@@ -33,15 +33,15 @@ class NamespaceResolver {
 	private function treatNamespacedNodes() {
 		$cypher     =
 			'MATCH          (ns:Stmt_Namespace)
-			 OPTIONAL MATCH (ns)-[:SUB_STMTS]->(s)-->(:Stmt_Use)-->()-->(u:Stmt_UseUse)
+			 OPTIONAL MATCH (ns)-[:SUB {type: "stmts"}]->(s)-->(:Stmt_Use)-->()-->(u:Stmt_UseUse)
 			 RETURN ns, collect(u) AS imports';
 		$namespaces = $this->backend->createQuery($cypher)->execute();
 
 		$this->backend->execute('MATCH (name:Name_FullyQualified) SET name.fullName = name.allParts');
-		$this->backend->execute('MATCH (ns:Stmt_Namespace)-[:SUB_NAME]->(name) SET name.fullName = name.allParts');
+		$this->backend->execute('MATCH (ns:Stmt_Namespace)-[:SUB {type: "name"}]->(name) SET name.fullName = name.allParts');
 
 		$nameCypher =
-			'MATCH (ns)-[:SUB_STMTS]->()-[*..]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
+			'MATCH (ns)-[:SUB {type: "stmts"}]->()-[*..]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
 		$nameQuery  = $this->backend->createQuery($nameCypher, 'name');
 
 		$readBulk = new Bulk($this->backend);
