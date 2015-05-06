@@ -152,6 +152,8 @@ class NodeWriter implements NodeWriterInterface {
 							$subNodeId = uniqid('node');
 							$bulk->push("CREATE (${subNodeId}:Literal{prop_{$subNodeId}})", ["prop_{$subNodeId}" => ['value' => $realSubNode]]);
 //							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
+						} else if ($realSubNode === NULL) {
+							continue;
 						} else {
 							$subNodeId = $this->writeNodeInner($realSubNode, $bulk);
 						}
