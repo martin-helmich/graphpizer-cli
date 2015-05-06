@@ -109,6 +109,12 @@ class NodeWriter implements NodeWriterInterface {
 			$properties['docComment'] = $commentText;
 		}
 
+		// We need to add a dummy value when the property array is empty, otherwise
+		// Neo4j will not create the node
+		if (empty($properties)) {
+			$properties['__dummy'] = 1;
+		}
+
 		$nodeId = uniqid('node');
 		$args = ["prop_{$nodeId}" => $properties];
 		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
@@ -158,8 +164,7 @@ class NodeWriter implements NodeWriterInterface {
 					}
 
 					if ($collectionId !== NULL) {
-						$relationName = 'SUB_' . strtoupper($subNodeName);
-						$bulk->push("CREATE ({$nodeId})-[:{$relationName}]->({$collectionId})");
+						$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$collectionId})");
 //						$neoNode
 //							->relateTo($collection, 'SUB_' . strtoupper($subNodeName))
 //							->save();
@@ -167,9 +172,7 @@ class NodeWriter implements NodeWriterInterface {
 				}
 			} elseif ($subNode instanceof Node) {
 				$subNodeId = $this->writeNodeInner($subNode, $bulk);
-				#$relationName = 'SUB_' . strtoupper($subNodeName);
-				$relationName = strtoupper($subNodeName);
-				$bulk->push("CREATE ({$nodeId})-[:SUB {type: '{$relationName}']->({$subNodeId})");
+				$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$subNodeId})");
 
 //				$neoNode
 //					->relateTo($neoSubNode, 'SUB_' . strtoupper($subNodeName))

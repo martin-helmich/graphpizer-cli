@@ -90,9 +90,25 @@ class NodeReader implements NodeReaderInterface {
 	 */
 	private function populateSubNodes(NeoNode $nn, PhpNode $instance) {
 		$properties = $nn->getProperties();
-		foreach ($nn->getRelationships('SUB') as $subNodeRel) {
+		$subNodeNames = $instance->getSubNodeNames();
 
+		foreach ($properties as $key => $value) {
+			if (in_array($key, $subNodeNames)) {
+				if ($value === '~~EMPTY_ARRAY~~') {
+					$value = [];
+				}
+				$instance->{$key} = $value;
+			}
 		}
+
+		/** @var Relationship $subNodeRel */
+		foreach ($nn->getRelationships('SUB', Relationship::DirectionOut) as $subNodeRel) {
+			$endNode = $subNodeRel->getEndNode();
+			$subNodeName = $subNodeRel->getProperty('type');
+
+			$instance->{$subNodeName} = $this->readNode($endNode);
+		}
+
 //		foreach ($instance->getSubNodeNames() as $subNodeName) {
 //			if (($rel = $nn->getFirstRelationship('SUB_' . strtoupper($subNodeName), Relationship::DirectionOut)) !==
 //				NULL

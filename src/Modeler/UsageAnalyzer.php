@@ -17,7 +17,7 @@ class UsageAnalyzer {
 	public function run() {
 		// Register usages from constructor calls.
 		$this->backend->execute(
-			'MATCH (name)<-[:SUB_CLASS]-(new:Expr_New)<-[*..]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL
+			'MATCH (name)<-[:SUB {type: "class"}]-(new:Expr_New)<-[:SUB*..]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL
 			 MERGE (type:Type{name:name.fullName, primitive: false})
 			 MERGE (type)<-[:INSTANTIATES]-(new)
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
@@ -39,7 +39,7 @@ class UsageAnalyzer {
 
 		// Register usages from parameter definitions
 		$this->backend->execute(
-			'MATCH (name)<-[:SUB_TYPE]-(p:Param)<--()<--(:Stmt_ClassMethod)<--()<-[:SUB_STMTS]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL AND (p.type IN ["array", "callable"]) = false
+			'MATCH (name)<-[:SUB {type: "type"}]-(p:Param)<--()<--(:Stmt_ClassMethod)<--()<-[:SUB {type: "stmts"}]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL AND (p.type IN ["array", "callable"]) = false
 			 MERGE (type:Type {name: name.fullName, primitive: false})
 			 MERGE (type)<-[:HAS_TYPE]-(p)
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count=r.count+1 ON CREATE SET r.count=1'
@@ -47,7 +47,7 @@ class UsageAnalyzer {
 
 		// Register usages from static method calls
 		$this->backend->execute(
-			'MATCH (name:Name)<-[:SUB_CLASS]-(call:Expr_StaticCall)<-[*..]-(:Stmt_ClassMethod)<-[:HAS]-()<-[:SUB_STMTS]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE call.class <> "parent" AND name.fullName IS NOT NULL
+			'MATCH (name:Name)<-[:SUB {type: "class"}]-(call:Expr_StaticCall)<-[:SUB*..]-(:Stmt_ClassMethod)<-[:HAS]-()<-[:SUB {type: "stmts"}]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE call.class <> "parent" AND name.fullName IS NOT NULL
 			 MERGE (type:Type {name: name.fullName, primitive: false})
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
 		);
