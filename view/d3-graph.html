@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+ /* stroke: #fff;
+  stroke-width: 1.5px;*/
+}
+
+.link, .marker {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var margin = {top: -5, right: -5, bottom: -5, left: -5};
+var width = 960,
+    height = 500;
+
+var color = d3.scale.category20();
+
+var force = d3.layout.force()
+    .charge(-120)
+    .linkDistance(30)
+    .size([width, height]);
+
+var zoom = d3.behavior.zoom()
+  .scaleExtent([0.1, 10])
+  .on("zoom", function() {
+    console.log("zoomed!");
+    container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+  });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", window.innerWidth)
+    .attr("height", window.innerHeight)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+    .call(zoom);
+
+var container = svg.append("g");
+
+container.append("svg:defs").selectAll("marker")
+    .data(["extend", "implements"])
+    .enter()
+    .append("svg:marker")
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 16)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5L0,-5")
+    .attr("class", "marker")
+    .attr("fill", function(d) {
+      if (d == 'implements') {
+        return "white";
+      } else {
+        return "#999";
+      }
+    })
+    .style("stroke-width", 1);
+
+container.append("svg:defs").selectAll("marker")
+    .data(["uses"])
+    .enter()
+    .append("svg:marker")
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 16)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("class", "marker")
+    .attr("fill", "none")
+    .style("stroke-width", 1);
+
+
+
+// defs.selectAll("marker")
+//     .data(["implements"])
+//     .enter()
+//     .append("svg:marker")
+//     .attr("id", String)
+//     .attr("viewBox", "0 -5 10 10")
+//     .attr("refX", 16)
+//     .attr("refY", 0)
+//     .attr("markerWidth", 6)
+//     .attr("markerHeight", 6)
+//     .attr("orient", "auto")
+//     .append("svg:path")
+//     .attr("d", "M0,-5L10,0L0,5L0,-5")
+//     .attr("stroke", "black")
+//     .attr("fill", "white")
+//     .attr("class", "marker")
+
+d3.json("data.json", function(error, graph) {
+  var edges = graph.edges.filter(function(e) {
+    //return e.type != 'USES';
+    return true
+  })
+
+  force
+      .nodes(graph.nodes)
+      .links(edges)
+      .start();
+
+  var link = container.selectAll(".link")
+      .data(graph.edges)
+      .enter().append("line")
+      .attr("class", "link")
+      .attr("marker-end", function(d) {
+        if (d.type == 'EXTENDS') {
+          return "url(#extend)";
+        } else if (d.type == 'IMPLEMENTS') {
+          return "url(#implements)";
+        } else if (d.type == 'USES') {
+          return "url(#uses)";
+        }
+      })
+      .style("stroke-width", function(d) { return 1; });
+
+  var node = container.selectAll(".node")
+      .data(graph.nodes)
+      .enter()
+      .append("circle")
+      .attr("class", "node")
+      .attr("r", 5)
+      .style("fill", function(d) { return color(d.type); })
+      .call(force.drag);
+
+  node.append("title")
+      .text(function(d) { return d.fqcn; });
+  node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.fqcn; });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  });
+});
+
+</script>
