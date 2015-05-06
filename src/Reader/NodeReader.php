@@ -90,20 +90,23 @@ class NodeReader implements NodeReaderInterface {
 	 */
 	private function populateSubNodes(NeoNode $nn, PhpNode $instance) {
 		$properties = $nn->getProperties();
-		foreach ($instance->getSubNodeNames() as $subNodeName) {
-			if (($rel = $nn->getFirstRelationship('SUB_' . strtoupper($subNodeName), Relationship::DirectionOut)) !==
-				NULL
-			) {
-				$value                    = $this->readNode($rel->getEndNode());
-				$instance->{$subNodeName} = $value;
-			} else if (array_key_exists($subNodeName, $properties)) {
-				$value = $properties[$subNodeName];
-				if ($value === '~~EMPTY_ARRAY~~') {
-					$value = [];
-				}
-				$instance->{$subNodeName} = $value;
-			}
+		foreach ($nn->getRelationships('SUB') as $subNodeRel) {
+
 		}
+//		foreach ($instance->getSubNodeNames() as $subNodeName) {
+//			if (($rel = $nn->getFirstRelationship('SUB_' . strtoupper($subNodeName), Relationship::DirectionOut)) !==
+//				NULL
+//			) {
+//				$value                    = $this->readNode($rel->getEndNode());
+//				$instance->{$subNodeName} = $value;
+//			} else if (array_key_exists($subNodeName, $properties)) {
+//				$value = $properties[$subNodeName];
+//				if ($value === '~~EMPTY_ARRAY~~') {
+//					$value = [];
+//				}
+//				$instance->{$subNodeName} = $value;
+//			}
+//		}
 	}
 
 	private function populateComments(NeoNode $nn, PhpNode $instance) {

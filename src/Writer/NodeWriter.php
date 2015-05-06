@@ -45,6 +45,7 @@ class NodeWriter implements NodeWriterInterface {
 		$colId = uniqid('node');
 
 		$bulk = new Bulk($this->backend);
+//		$bulk->push('USING PERIODIC COMMIT 100');
 		$bulk->push("CREATE ({$colId}:Collection{fileRoot: true})");
 
 		$i = 0;
@@ -166,8 +167,9 @@ class NodeWriter implements NodeWriterInterface {
 				}
 			} elseif ($subNode instanceof Node) {
 				$subNodeId = $this->writeNodeInner($subNode, $bulk);
-				$relationName = 'SUB_' . strtoupper($subNodeName);
-				$bulk->push("CREATE ({$nodeId})-[:{$relationName}]->({$subNodeId})");
+				#$relationName = 'SUB_' . strtoupper($subNodeName);
+				$relationName = strtoupper($subNodeName);
+				$bulk->push("CREATE ({$nodeId})-[:SUB {type: '{$relationName}']->({$subNodeId})");
 
 //				$neoNode
 //					->relateTo($neoSubNode, 'SUB_' . strtoupper($subNodeName))

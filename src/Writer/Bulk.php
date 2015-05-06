@@ -7,7 +7,7 @@ class Bulk {
 
 	protected $cypherQueries = [];
 
-	protected $arguments     = [];
+	protected $arguments = [];
 
 	/**
 	 * @var Backend
@@ -15,21 +15,32 @@ class Bulk {
 	protected $backend;
 
 	public function __construct(Backend $backend, array $queries = [], array $arguments = []) {
-		$this->backend       = $backend;
+		$this->backend = $backend;
 		$this->cypherQueries = $queries;
-		$this->arguments     = $arguments;
+		$this->arguments = $arguments;
 	}
 
 	public function merge(Bulk $other) {
-		$mergedQueries   = array_merge($this->cypherQueries, $other->cypherQueries);
+		$mergedQueries = array_merge($this->cypherQueries, $other->cypherQueries);
 		$mergedArguments = array_merge($this->arguments, $other->arguments);
 
 		return new Bulk($this->backend, $mergedQueries, $mergedArguments);
 	}
 
 	public function push($cypher, array $arguments = []) {
+		$cypher = trim($cypher);
+		$count = count($this->cypherQueries);
+
+//		if ($count > 0 && substr($cypher, 0, 6) === 'CREATE' && substr($this->cypherQueries[$count - 1], 0, 6) === 'CREATE') {
+//			$last = &$this->cypherQueries[$count - 1];
+//			$last .= ', ' . substr($cypher, 7);
+//		} else {
 		$this->cypherQueries[] = $cypher;
-		$this->arguments       = array_merge($this->arguments, $this->filterNullValues($arguments));
+//		}
+
+		$arguments = $this->filterNullValues($arguments);
+
+		$this->arguments = array_merge($this->arguments, $arguments);
 	}
 
 	private function filterNullValues(array $arguments) {
@@ -66,13 +77,13 @@ class Bulk {
 		}
 
 		$cypher = $this->renderCypher();
-		$query  = $this->backend->createQuery($cypher);
+		$query = $this->backend->createQuery($cypher);
 
 		try {
 			return $query->execute($this->arguments);
-		}
-		catch (\Exception $e) {
-			var_dump($cypher);
+		} catch (\Exception $e) {
+			echo $cypher;
+			var_dump($this->arguments);
 			throw $e;
 		}
 	}
