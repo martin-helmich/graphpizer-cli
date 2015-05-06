@@ -49,7 +49,8 @@ class JsonExporter implements ExporterInterface {
 				'id'     => $r->getId(),
 				'type'   => $r->getType(),
 				'source' => $idMap[$row->node('a')->getId()],
-				'target' => $idMap[$row->node('b')->getId()]
+				'target' => $idMap[$row->node('b')->getId()],
+				'comment' => $row->node('a')->getProperty('fqcn') . ' ' . $r->getType() . ' ' . $row->node('b')->getProperty('fqcn')
 			];
 		}
 
