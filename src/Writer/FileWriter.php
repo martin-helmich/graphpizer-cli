@@ -24,10 +24,16 @@ class FileWriter {
 	 */
 	private $backend;
 
-	public function __construct(Backend $backend, NodeWriterInterface $nodeWriter, Parser $parser) {
-		$this->nodeWriter    = $nodeWriter;
-		$this->parser        = $parser;
-		$this->backend       = $backend;
+	/**
+	 * @var array
+	 */
+	private $excludePatterns;
+
+	public function __construct(Backend $backend, NodeWriterInterface $nodeWriter, Parser $parser, array $excludePatterns = []) {
+		$this->nodeWriter = $nodeWriter;
+		$this->parser = $parser;
+		$this->backend = $backend;
+		$this->excludePatterns = $excludePatterns;
 	}
 
 	public function addFileReadListener(callable $debugListener) {
@@ -39,16 +45,22 @@ class FileWriter {
 		$iteratorIterator = new \RecursiveIteratorIterator($dirIterator);
 		$regexIterator = new \RegexIterator($iteratorIterator, '/^(.*)\.php[345]?$/', \RecursiveRegexIterator::GET_MATCH);
 
-		foreach($regexIterator as $fileInfo) {
+		foreach ($regexIterator as $fileInfo) {
 			$this->readFile($fileInfo[0], $directory);
 		}
 	}
 
 	public function readFile($filename, $baseDirectory = NULL) {
+		foreach ($this->excludePatterns as $excludePattern) {
+			if (strstr($filename, $excludePattern) !== FALSE) {
+				return NULL;
+			}
+		}
+
 		$this->notify('fileRead', $filename);
 
 		$code = file_get_contents($filename);
-		$ast  = $this->parser->parse($code);
+		$ast = $this->parser->parse($code);
 
 		$relativeFilename = $baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
 

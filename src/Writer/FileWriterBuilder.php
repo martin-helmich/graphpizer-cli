@@ -12,15 +12,26 @@ class FileWriterBuilder {
 	 */
 	private $backend;
 
+	/**
+	 * @var array
+	 */
+	private $excludePatterns = [];
+
 	public function __construct(Backend $backend) {
 		$this->backend = $backend;
+	}
+
+	public function setExcludePatterns(array $excludeList) {
+		$this->excludePatterns = $excludeList;
+		return $this;
 	}
 
 	public function build() {
 		return new FileWriter(
 			$this->backend,
 			(new NodeWriterBuilder($this->backend))->build(),
-			new Parser(new Lexer())
+			new Parser(new Lexer()),
+			$this->excludePatterns
 		);
 	}
 }

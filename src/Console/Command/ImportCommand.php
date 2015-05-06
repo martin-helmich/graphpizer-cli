@@ -14,6 +14,7 @@ class ImportCommand extends AbstractCommand {
 			->setName('import:ast')
 			->setDescription('Import a set of files as AST')
 			->addOption('prune', NULL, InputOption::VALUE_NONE, 'Prune the database before execution')
+			->addOption('exclude', 'e', InputOption::VALUE_IS_ARRAY|InputOption::VALUE_REQUIRED, 'Exclude directories')
 			->addArgument('dir', InputArgument::IS_ARRAY | InputArgument::REQUIRED);
 	}
 
@@ -36,6 +37,7 @@ class ImportCommand extends AbstractCommand {
 		$importService->importSourceFiles(
 			$input->getArgument('dir'),
 			$input->getOption('prune'),
+			$input->getOption('exclude'),
 			$debugCallback
 		);
 

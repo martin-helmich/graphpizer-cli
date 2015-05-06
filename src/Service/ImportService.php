@@ -16,12 +16,14 @@ class ImportService {
 		$this->backend = $backend;
 	}
 
-	public function importSourceFiles(array $sourceFiles, $pruneFirst = FALSE, callable $debugCallback = NULL) {
+	public function importSourceFiles(array $sourceFiles, $pruneFirst = FALSE, array $excludePatterns = [], callable $debugCallback = NULL) {
 		if ($pruneFirst) {
 			$this->backend->wipe();
 		}
 
-		$fileWriter = (new FileWriterBuilder($this->backend))->build();
+		$fileWriter = (new FileWriterBuilder($this->backend))
+			->setExcludePatterns($excludePatterns)
+			->build();
 
 		if (NULL !== $debugCallback) {
 			$fileWriter->addFileReadListener($debugCallback);
