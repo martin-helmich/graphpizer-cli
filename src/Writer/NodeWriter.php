@@ -20,7 +20,6 @@ namespace Helmich\Graphizer\Writer;
  */
 
 use Everyman\Neo4j\Node as NeoNode;
-use Helmich\Graphizer\Data\NodeCollection;
 use Helmich\Graphizer\Persistence\Backend;
 use PhpParser\Node;
 
@@ -53,7 +52,7 @@ class NodeWriter implements NodeWriterInterface {
 			$nodeId = $this->writeNodeInner($node, $bulk);
 			$bulk->push("CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
 
-			$i ++;
+			$i++;
 		}
 
 		$bulk->push("RETURN ${colId}");
@@ -116,7 +115,7 @@ class NodeWriter implements NodeWriterInterface {
 		}
 
 		$nodeId = uniqid('node');
-		$args = ["prop_{$nodeId}" => $properties];
+		$args   = ["prop_{$nodeId}" => $properties];
 		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
 
 		$bulk->push($cypher, $args);
@@ -137,20 +136,23 @@ class NodeWriter implements NodeWriterInterface {
 //						$neoNode->save();
 					}
 				} else {
-					$collection = NULL;
+					$collection   = NULL;
 					$collectionId = NULL;
 
 					foreach ($subNode as $i => $realSubNode) {
 						if ($collectionId === NULL) {
 							$collectionId = uniqid('node');
-							$cypher = "CREATE ({$collectionId}:Collection)";
+							$cypher       = "CREATE ({$collectionId}:Collection)";
 							$bulk->push($cypher);
 //							$collection = $this->backend->createNode([], NodeCollection::NODE_NAME);
 						}
 
 						if (is_scalar($realSubNode)) {
 							$subNodeId = uniqid('node');
-							$bulk->push("CREATE (${subNodeId}:Literal{prop_{$subNodeId}})", ["prop_{$subNodeId}" => ['value' => $realSubNode]]);
+							$bulk->push(
+								"CREATE (${subNodeId}:Literal{prop_{$subNodeId}})",
+								["prop_{$subNodeId}" => ['value' => $realSubNode]]
+							);
 //							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
 						} else if ($realSubNode === NULL) {
 							continue;
