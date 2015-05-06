@@ -368,11 +368,6 @@ class ClassModelGenerator {
 			 RETURN c"
 		);
 
-//		$class = $this->backend->createNode($properties, ucfirst($row['type']));
-//		$class
-//			->relateTo($cls, 'DEFINED_IN')
-//			->save();
-
 		$result = $q->execute($arguments);
 		$class  = $result[0]->node('c');
 

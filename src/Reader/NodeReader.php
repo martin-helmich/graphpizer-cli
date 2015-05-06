@@ -108,21 +108,6 @@ class NodeReader implements NodeReaderInterface {
 
 			$instance->{$subNodeName} = $this->readNode($endNode);
 		}
-
-//		foreach ($instance->getSubNodeNames() as $subNodeName) {
-//			if (($rel = $nn->getFirstRelationship('SUB_' . strtoupper($subNodeName), Relationship::DirectionOut)) !==
-//				NULL
-//			) {
-//				$value                    = $this->readNode($rel->getEndNode());
-//				$instance->{$subNodeName} = $value;
-//			} else if (array_key_exists($subNodeName, $properties)) {
-//				$value = $properties[$subNodeName];
-//				if ($value === '~~EMPTY_ARRAY~~') {
-//					$value = [];
-//				}
-//				$instance->{$subNodeName} = $value;
-//			}
-//		}
 	}
 
 	private function populateComments(NeoNode $nn, PhpNode $instance) {

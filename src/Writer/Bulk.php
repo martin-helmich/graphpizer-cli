@@ -29,14 +29,7 @@ class Bulk {
 
 	public function push($cypher, array $arguments = []) {
 		$cypher = trim($cypher);
-		$count = count($this->cypherQueries);
-
-//		if ($count > 0 && substr($cypher, 0, 6) === 'CREATE' && substr($this->cypherQueries[$count - 1], 0, 6) === 'CREATE') {
-//			$last = &$this->cypherQueries[$count - 1];
-//			$last .= ', ' . substr($cypher, 7);
-//		} else {
 		$this->cypherQueries[] = $cypher;
-//		}
 
 		$arguments = $this->filterNullValues($arguments);
 

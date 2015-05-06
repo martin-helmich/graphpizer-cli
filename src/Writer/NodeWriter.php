@@ -44,7 +44,6 @@ class NodeWriter implements NodeWriterInterface {
 		$colId = uniqid('node');
 
 		$bulk = new Bulk($this->backend);
-//		$bulk->push('USING PERIODIC COMMIT 100');
 		$bulk->push("CREATE ({$colId}:Collection{fileRoot: true})");
 
 		$i = 0;
@@ -58,25 +57,6 @@ class NodeWriter implements NodeWriterInterface {
 		$bulk->push("RETURN ${colId}");
 
 		return $bulk->evaluate()[0]->node($colId);
-//		echo($cypher);
-
-//		$nodes = array_map(
-//			function (Node $node) {
-//				return $this->writeNode($node);
-//			},
-//			$nodes
-//		);
-//
-//		$collection = $this->backend->createNode(['fileRoot' => TRUE], NodeCollection::NODE_NAME);
-//
-//		foreach ($nodes as $i => $node) {
-//			$collection
-//				->relateTo($node, 'HAS')
-//				->setProperty('ordering', $i)
-//				->save();
-//		}
-//
-//		return $collection;
 	}
 
 	public function writeNode(Node $node) {
@@ -95,11 +75,6 @@ class NodeWriter implements NodeWriterInterface {
 	 */
 	public function writeNodeInner(Node $node, Bulk $bulk) {
 		$commentText = $node->getDocComment() ? $node->getDocComment()->getText() : NULL;
-
-//		$neoNode = $this->backend->createNode($this->getNodeProperties($node), $node->getType());
-//		$neoNode->setProperty('docComment', $commentText);
-//		$this->enrichNode($node, $neoNode);
-//		$neoNode->save();
 
 		$properties = $this->getNodeProperties($node);
 		$properties = $this->enrichNodeProperties($node, $properties);
@@ -128,12 +103,8 @@ class NodeWriter implements NodeWriterInterface {
 				if ($this->isScalarArray($subNode)) {
 					if (!empty($subNode)) {
 						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
-						#$neoNode->setProperty($subNodeName, $subNode);
-						#$neoNode->save();
 					} else {
 						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => '~~EMPTY_ARRAY~~']);
-//						$neoNode->setProperty($subNodeName, '~~EMPTY_ARRAY~~');
-//						$neoNode->save();
 					}
 				} else {
 					$collection   = NULL;
@@ -144,7 +115,6 @@ class NodeWriter implements NodeWriterInterface {
 							$collectionId = uniqid('node');
 							$cypher       = "CREATE ({$collectionId}:Collection)";
 							$bulk->push($cypher);
-//							$collection = $this->backend->createNode([], NodeCollection::NODE_NAME);
 						}
 
 						if (is_scalar($realSubNode)) {
@@ -153,7 +123,6 @@ class NodeWriter implements NodeWriterInterface {
 								"CREATE (${subNodeId}:Literal{prop_{$subNodeId}})",
 								["prop_{$subNodeId}" => ['value' => $realSubNode]]
 							);
-//							$neoSubNode = $this->backend->createNode(['value' => $realSubNode], 'Literal');
 						} else if ($realSubNode === NULL) {
 							continue;
 						} else {
@@ -161,35 +130,20 @@ class NodeWriter implements NodeWriterInterface {
 						}
 
 						$bulk->push("CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
-//						$collection
-//							->relateTo($neoSubNode, 'HAS')
-//							->setProperty('ordering', $i)
-//							->save();
 					}
 
 					if ($collectionId !== NULL) {
 						$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$collectionId})");
-//						$neoNode
-//							->relateTo($collection, 'SUB_' . strtoupper($subNodeName))
-//							->save();
 					}
 				}
 			} elseif ($subNode instanceof Node) {
 				$subNodeId = $this->writeNodeInner($subNode, $bulk);
 				$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$subNodeId})");
-
-//				$neoNode
-//					->relateTo($neoSubNode, 'SUB_' . strtoupper($subNodeName))
-//					->setProperty('ordering', 0)
-//					->save();
 			} else {
 				$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
-//				$neoNode->setProperty($subNodeName, $subNode);
-//				$neoNode->save();
 			}
 		}
 
-//		return $neoNode;
 		return $nodeId;
 	}
 
@@ -226,11 +180,6 @@ class NodeWriter implements NodeWriterInterface {
 			foreach ($phpNode->getAttribute('comments') as $comment) {
 				$id = $this->commentWriter->writeComment($comment, $bulk);
 				$bulk->push("CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
-//
-//				$commentNode = $this->commentWriter->writeComment($comment);
-//				$neoNode
-//					->relateTo($commentNode, 'HAS_COMMENT')
-//					->save();
 			}
 		}
 	}
