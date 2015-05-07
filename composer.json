@@ -1,10 +1,6 @@
 {
     "name": "helmich/graphizer",
     "description": "Store PHP syntax trees in Neo4j graph structures",
-    "require": {
-        "nikic/php-parser": "dev-master",
-        "everyman/neo4jphp": "*"
-    },
     "license": "LGPL",
     "authors": [
         {
@@ -17,7 +13,8 @@
         "nikic/php-parser": "dev-master",
         "everyman/neo4jphp": "*",
         "phpdocumentor/reflection-docblock": "*",
-        "symfony/console": "*"
+        "symfony/console": "*",
+        "twig/twig": "~1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "*",
