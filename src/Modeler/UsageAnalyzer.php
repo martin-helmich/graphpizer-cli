@@ -17,7 +17,7 @@ class UsageAnalyzer {
 	public function run() {
 		// Register usages from constructor calls.
 		$this->backend->execute(
-			'MATCH (name)<-[:SUB {type: "class"}]-(new:Expr_New)<-[:SUB*..]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL
+			'MATCH (name)<-[:SUB {type: "class"}]-(new:Expr_New)<-[:SUB|HAS*]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL
 			 MERGE (type:Type{name:name.fullName, primitive: false})
 			 MERGE (type)<-[:INSTANTIATES]-(new)
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
@@ -47,7 +47,7 @@ class UsageAnalyzer {
 
 		// Register usages from static method calls
 		$this->backend->execute(
-			'MATCH (name:Name)<-[:SUB {type: "class"}]-(call:Expr_StaticCall)<-[:SUB*..]-(:Stmt_ClassMethod)<-[:HAS]-()<-[:SUB {type: "stmts"}]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE call.class <> "parent" AND name.fullName IS NOT NULL
+			'MATCH (name:Name)<-[:SUB {type: "class"}]-(call:Expr_StaticCall)<-[:SUB|HAS*]-(:Stmt_ClassMethod)<-[:HAS]-()<-[:SUB {type: "stmts"}]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE call.class <> "parent" AND name.fullName IS NOT NULL
 			 MERGE (type:Type {name: name.fullName, primitive: false})
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
 		);

@@ -24,7 +24,7 @@ class NamespaceResolver {
 
 	private function treatUnnamespacedNodes() {
 		$this->backend->execute(
-			'MATCH (c:Collection)-[:HAS]->(ns)-[*..]->(n:Name)
+			'MATCH (c:Collection)-[:HAS]->(ns)-[:SUB|HAS*]->(n:Name)
 			 WHERE c.fileRoot = true AND NOT ns:Stmt_Namespace
 			 SET n.fullName = n.allParts'
 		);
@@ -41,7 +41,7 @@ class NamespaceResolver {
 		$this->backend->execute('MATCH (ns:Stmt_Namespace)-[:SUB {type: "name"}]->(name) SET name.fullName = name.allParts');
 
 		$nameCypher =
-			'MATCH (ns)-[:SUB {type: "stmts"}]->()-[*..]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
+			'MATCH (ns)-[:SUB {type: "stmts"}]->()-[:SUB|HAS*]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
 		$nameQuery  = $this->backend->createQuery($nameCypher, 'name');
 
 		$readBulk = new Bulk($this->backend);

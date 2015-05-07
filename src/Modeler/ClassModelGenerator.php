@@ -26,12 +26,15 @@ class ClassModelGenerator {
 	}
 
 	public function run() {
+		$this->backend->execute('CREATE INDEX ON :Type(name)');
+		$this->backend->execute('CREATE INDEX ON :Class(fqcn)');
+
 		$this->namespaceResolver->run();
 
 		$query = $this->backend->createQuery(
-			'MATCH (cls:Stmt_Class)       OPTIONAL MATCH (ns:Stmt_Namespace)-[*..]->(cls)   RETURN cls   AS cls, ns, "class"     AS type UNION
-			 MATCH (iface:Stmt_Interface) OPTIONAL MATCH (ns:Stmt_Namespace)-[*..]->(iface) RETURN iface AS cls, ns, "interface" AS type UNION
-			 MATCH (trt:Stmt_Trait)       OPTIONAL MATCH (ns:Stmt_Namespace)-[*..]->(trt)   RETURN trt   AS cls, ns, "trait"     AS type'
+			'MATCH (cls:Stmt_Class)       OPTIONAL MATCH (ns:Stmt_Namespace)-[:SUB|HAS*]->(cls)   RETURN cls   AS cls, ns, "class"     AS type UNION
+			 MATCH (iface:Stmt_Interface) OPTIONAL MATCH (ns:Stmt_Namespace)-[:SUB|HAS*]->(iface) RETURN iface AS cls, ns, "interface" AS type UNION
+			 MATCH (trt:Stmt_Trait)       OPTIONAL MATCH (ns:Stmt_Namespace)-[:SUB|HAS*]->(trt)   RETURN trt   AS cls, ns, "trait"     AS type'
 		);
 
 		foreach ($query->execute() as $row) {
@@ -98,7 +101,7 @@ class ClassModelGenerator {
 	private function extractPropertiesForClass(Node $classNode, Node $classStmtNode) {
 		$cypher =
 			'START cls=node({def})
-			 MATCH (cls)-[*..]->(outer:Stmt_Property)-->()-->(inner:Stmt_PropertyProperty)
+			 MATCH (cls)-[:SUB|HAS*]->(outer:Stmt_Property)-->()-->(inner:Stmt_PropertyProperty)
 			 OPTIONAL MATCH (inner)-[:SUB {type: "default"}]->(default)
 			 OPTIONAL MATCH (class)-[:HAS_PROPERTY]->(existing) WHERE id(class)={cls} AND existing.name=inner.name
 			 RETURN outer, inner, default, existing';
@@ -262,7 +265,7 @@ class ClassModelGenerator {
 	 * @return Node
 	 */
 	private function getNamespaceForContext(Node $node) {
-		$cypher = 'MATCH (n)-[:DEFINED_IN]->()<-[*..]-(ns:Stmt_Namespace) WHERE id(n)={node} RETURN ns';
+		$cypher = 'MATCH (n)-[:DEFINED_IN]->()<-[:SUB|HAS*]-(ns:Stmt_Namespace) WHERE id(n)={node} RETURN ns';
 		$query  = $this->backend->createQuery($cypher);
 		$result = $query->execute(['node' => $node]);
 
@@ -276,7 +279,7 @@ class ClassModelGenerator {
 	private function getImportsForContext(Node $node) {
 		$cypher  =
 			'START n=node({node})
-			 MATCH (n)-[:DEFINED_IN]->()<-[*..]-(ns:Stmt_Namespace)
+			 MATCH (n)-[:DEFINED_IN]->()<-[:SUB|HAS*]-(ns:Stmt_Namespace)
 			 MATCH (ns)-[:SUB {type: "stmts"}]->()-->(:Stmt_Use)-->()-->(use:Stmt_UseUse)
 			 RETURN use';
 		$query   = $this->backend->createQuery($cypher, 'use');
