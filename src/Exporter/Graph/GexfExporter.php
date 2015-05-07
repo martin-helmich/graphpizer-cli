@@ -14,9 +14,9 @@ class GexfExporter implements ExporterInterface {
 		$this->backend = $backend;
 	}
 
-	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE) {
+	public function export(ExportConfiguration $configuration) {
 		$domDocument = new \DOMDocument('1.0', 'UTF-8');
-		$domDocument->formatOutput = $pretty;
+		$domDocument->formatOutput = $configuration->isPretty();
 
 		$root = $domDocument->createElement('gexf');
 		$root->setAttribute('xmlns', 'http://www.gexf.net/1.2draft');

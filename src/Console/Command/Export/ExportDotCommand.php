@@ -20,7 +20,6 @@
 
 namespace Helmich\Graphizer\Console\Command\Export;
 
-use Helmich\Graphizer\Console\Command\AbstractCommand;
 use Helmich\Graphizer\Exporter\Graph\Dot\CompactRenderingStrategy;
 use Helmich\Graphizer\Exporter\Graph\Dot\RenderingStrategy;
 use Helmich\Graphizer\Exporter\Graph\Dot\VerboseRenderingStrategy;
@@ -29,9 +28,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ExportDotCommand extends AbstractCommand {
+class ExportDotCommand extends AbstractExportCommand {
 
 	protected function configure() {
+		parent::configure();
 		$this
 			->setName('export:dot')
 			->setDescription('Export into DOT format (http://www.graphviz.org/content/dot-language)')
@@ -44,7 +44,7 @@ class ExportDotCommand extends AbstractCommand {
 		$strategy = $this->getStrategy($input->getOption('strategy'));
 		$exporter = new DotExporter($backend, $strategy);
 
-		$dot = $exporter->export(FALSE, FALSE, TRUE);
+		$dot = $exporter->export($this->buildExportConfiguration($input));
 
 		if ($input->getOption('export')) {
 			$layout = $this->getRendererForStrategy($input->getOption('strategy'));

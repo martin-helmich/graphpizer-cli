@@ -7,9 +7,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ExportJsonCommand extends AbstractCommand {
+class ExportJsonCommand extends AbstractExportCommand {
 
 	protected function configure() {
+		parent::configure();
 		$this
 			->setName('export:json')
 			->setDescription('Export into JSON format')
@@ -20,6 +21,6 @@ class ExportJsonCommand extends AbstractCommand {
 		$backend  = $this->connect($input, $output);
 		$exporter = new JsonExporter($backend);
 
-		$output->write($exporter->export(FALSE, FALSE, TRUE));
+		$output->write($exporter->export($this->buildExportConfiguration($input)));
 	}
 }

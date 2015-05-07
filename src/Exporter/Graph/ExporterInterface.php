@@ -3,5 +3,5 @@ namespace Helmich\Graphizer\Exporter\Graph;
 
 interface ExporterInterface {
 
-	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE);
+	public function export(ExportConfiguration $configuration);
 }

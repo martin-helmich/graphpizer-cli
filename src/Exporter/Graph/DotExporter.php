@@ -46,7 +46,7 @@ class DotExporter implements ExporterInterface {
 		$this->strategy = $strategy;
 	}
 
-	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE) {
+	public function export(ExportConfiguration $configuration) {
 		$output = "digraph {\n";
 		$output .= "    overlap=false;\n";
 		$output .= "    splines=true;\n";

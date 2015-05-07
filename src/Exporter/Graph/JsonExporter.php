@@ -15,7 +15,7 @@ class JsonExporter implements ExporterInterface {
 		$this->backend = $backend;
 	}
 
-	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE) {
+	public function export(ExportConfiguration $configuration) {
 		$nodes = [];
 		$edges = [];
 
@@ -55,7 +55,7 @@ class JsonExporter implements ExporterInterface {
 		}
 
 		$flags = 0;
-		if ($pretty) {
+		if ($configuration->isPretty()) {
 			$flags = JSON_PRETTY_PRINT;
 		}
 

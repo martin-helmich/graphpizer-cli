@@ -20,26 +20,30 @@
 
 namespace Helmich\Graphizer\Console\Command\Export;
 
-use Helmich\Graphizer\Exporter\Graph\PlantUmlExporter;
+use Helmich\Graphizer\Console\Command\AbstractCommand;
+use Helmich\Graphizer\Exporter\Graph\ExportConfiguration;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
 
-class ExportPlantUmlCommand extends AbstractExportCommand {
+/**
+ * Abstract base class for commands that export the model as graph.
+ *
+ * @package Helmich\Graphizer
+ * @subpackage Console\Command\Export
+ */
+abstract class AbstractExportCommand extends AbstractCommand {
 
 	protected function configure() {
-		parent::configure();
 		$this
-			->setName('export:plantuml')
-			->setDescription('Export into PlantUML format (http://plantuml.sourceforge.net)')
-			->addOption('export', 'e', InputOption::VALUE_REQUIRED, 'Export as PNG to this file');
+			->addOption('with-usages', NULL, InputOption::VALUE_NONE, "Add use relations into the graph")
+			->addOption('with-properties', NULL, InputOption::VALUE_NONE, "Add class properties into the graph")
+			->addOption('with-methods', NULL, InputOption::VALUE_NONE, "Add class methods to the graph");
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
-		$backend  = $this->connect($input, $output);
-		$exporter = new PlantUmlExporter($backend);
-
-		$dot = $exporter->export($this->buildExportConfiguration($input));
-		$output->write($dot);
+	protected function buildExportConfiguration(InputInterface $input) {
+		return (new ExportConfiguration())
+			->setWithMethods($input->getOption('with-methods'))
+			->setWithUsages($input->getOption('with-usages'))
+			->setWithUsages($input->getOption('with-properties'));
 	}
 }

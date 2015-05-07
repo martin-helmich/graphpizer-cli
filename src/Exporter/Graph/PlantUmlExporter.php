@@ -74,7 +74,7 @@ class PlantUmlExporter implements ExporterInterface {
 		return '';
 	}
 
-	public function export($withMethods = FALSE, $withProperties = FALSE, $pretty = FALSE) {
+	public function export(ExportConfiguration $configuration) {
 		$output = "@startuml\n";
 
 		$q = $this->backend->createQuery('MATCH c WHERE c:Class OR c:Interface OR c:Trait RETURN c', 'c');
@@ -92,7 +92,7 @@ class PlantUmlExporter implements ExporterInterface {
 				$presentation
 			);
 
-			if ($withProperties || TRUE) {
+			if ($configuration->isWithProperties()) {
 				/** @var Relationship $rel */
 				foreach ($node->getRelationships('HAS_PROPERTY', Relationship::DirectionOut) as $rel) {
 					$property = $rel->getEndNode();
@@ -104,7 +104,7 @@ class PlantUmlExporter implements ExporterInterface {
 				}
 			}
 
-			if ($withMethods || TRUE) {
+			if ($configuration->isWithMethods()) {
 				/** @var Relationship $rel */
 				foreach ($node->getRelationships('HAS_METHOD', Relationship::DirectionOut) as $rel) {
 					$method = $rel->getEndNode();
