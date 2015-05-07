@@ -1,7 +1,6 @@
 <?php
 namespace Helmich\Graphizer\Console\Command\Export;
 
-use Helmich\Graphizer\Console\Command\AbstractCommand;
 use Helmich\Graphizer\Exporter\Graph\JsonExporter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -14,7 +13,7 @@ class ExportJsonCommand extends AbstractExportCommand {
 		$this
 			->setName('export:json')
 			->setDescription('Export into JSON format')
-			->addOption('pretty', NULL, InputOption::VALUE_NONE, 'Pretty-print the generated XML');
+			->addOption('pretty', NULL, InputOption::VALUE_NONE, 'Pretty-print the generated JSON');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
