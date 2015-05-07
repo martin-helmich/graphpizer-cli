@@ -22,6 +22,7 @@
 use Helmich\Graphizer\Console\Application;
 use Helmich\Graphizer\Console\Command\CommandBuilder;
 use Helmich\Graphizer\Console\Command\Export\ExportCodeCommand;
+use Helmich\Graphizer\Console\Command\Export\ExportD3jsCommand;
 use Helmich\Graphizer\Console\Command\Export\ExportDotCommand;
 use Helmich\Graphizer\Console\Command\Export\ExportGexfCommand;
 use Helmich\Graphizer\Console\Command\Export\ExportJsonCommand;
@@ -53,5 +54,6 @@ $app->add($commandBuilder->build(ExportGexfCommand::class));
 $app->add($commandBuilder->build(ExportJsonCommand::class));
 $app->add($commandBuilder->build(ExportDotCommand::class));
 $app->add($commandBuilder->build(ExportPlantUmlCommand::class));
+$app->add($commandBuilder->build(ExportD3jsCommand::class));
 $app->add($commandBuilder->build(ExportCodeCommand::class));
 $app->run();

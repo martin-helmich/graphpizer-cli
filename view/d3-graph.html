@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html>
 <meta charset="utf-8">
 <style>
 
@@ -103,7 +104,8 @@ container.append("svg:defs").selectAll("marker")
 //     .attr("fill", "white")
 //     .attr("class", "marker")
 
-d3.json("data.json", function(error, graph) {
+var graph = {{graph|raw}};
+
   var edges = graph.edges.filter(function(e) {
     //return e.type != 'USES';
     return true
@@ -154,6 +156,7 @@ d3.json("data.json", function(error, graph) {
     node.attr("cx", function(d) { return d.x; })
         .attr("cy", function(d) { return d.y; });
   });
-});
 
 </script>
+</body>
+</html>
