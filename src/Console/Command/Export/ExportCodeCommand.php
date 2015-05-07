@@ -1,6 +1,7 @@
 <?php
-namespace Helmich\Graphizer\Console\Command;
+namespace Helmich\Graphizer\Console\Command\Export;
 
+use Helmich\Graphizer\Console\Command\AbstractCommand;
 use Helmich\Graphizer\Exporter\Code\PhpExporter;
 use Helmich\Graphizer\Reader\NodeReaderBuilder;
 use PhpParser\PrettyPrinter\Standard;

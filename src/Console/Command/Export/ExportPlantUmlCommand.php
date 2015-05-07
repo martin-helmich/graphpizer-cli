@@ -18,12 +18,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Console\Command;
+namespace Helmich\Graphizer\Console\Command\Export;
 
+use Helmich\Graphizer\Console\Command\AbstractCommand;
 use Helmich\Graphizer\Exporter\Graph\Dot\CompactRenderingStrategy;
 use Helmich\Graphizer\Exporter\Graph\Dot\RenderingStrategy;
 use Helmich\Graphizer\Exporter\Graph\Dot\VerboseRenderingStrategy;
-use Helmich\Graphizer\Exporter\Graph\DotExporter;
 use Helmich\Graphizer\Exporter\Graph\PlantUmlExporter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;

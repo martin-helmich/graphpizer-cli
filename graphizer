@@ -20,14 +20,14 @@
  */
 
 use Helmich\Graphizer\Console\Application;
-use Helmich\Graphizer\Console\Command\ExportCodeCommand;
-use Helmich\Graphizer\Console\Command\ExportDotCommand;
-use Helmich\Graphizer\Console\Command\ExportGexfCommand;
-use Helmich\Graphizer\Console\Command\ExportJsonCommand;
-use Helmich\Graphizer\Console\Command\ExportPlantUmlCommand;
+use Helmich\Graphizer\Console\Command\CommandBuilder;
+use Helmich\Graphizer\Console\Command\Export\ExportCodeCommand;
+use Helmich\Graphizer\Console\Command\Export\ExportDotCommand;
+use Helmich\Graphizer\Console\Command\Export\ExportGexfCommand;
+use Helmich\Graphizer\Console\Command\Export\ExportJsonCommand;
+use Helmich\Graphizer\Console\Command\Export\ExportPlantUmlCommand;
 use Helmich\Graphizer\Console\Command\GenerateModelCommand;
 use Helmich\Graphizer\Console\Command\ImportCommand;
-use Helmich\Graphizer\Console\Command\CommandBuilder;
 use Helmich\Graphizer\Console\Command\PruneCommand;
 
 if (file_exists(__DIR__ . '/vendor/autoload.php'))
