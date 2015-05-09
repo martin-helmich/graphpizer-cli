@@ -51,5 +51,19 @@ class UsageAnalyzer {
 			 MERGE (type:Type {name: name.fullName, primitive: false})
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
 		);
+
+		// Register usages from catch calls
+		$this->backend->execute(
+			'MATCH (name)<-[:SUB {type: "type"}]->(c:Stmt_Catch)<-[:SUB|HAS*]-(:Stmt_Class)<-[:DEFINED_IN]-(class)
+			 MERGE (type:Type {name: name.fullName, primitive: false})
+			 MERGE (class)-[r:USES]->(type) ON MATCH SET r.count = r.count +1 ON CREATE SET r.count = 1'
+		);
+
+		// Register usages from constant fetches
+		$this->backend->execute(
+			'MATCH (name)<-[:SUB {type: "class"}]-(:Expr_ClassConstFetch)<-[:SUB|HAS*]-(:Stmt_Class)<-[:DEFINED_IN]-(class) WHERE NOT (name.allParts IN ["self", "parent"])
+			 MERGE (type:Type {name: name.fullName, primitive: false})
+			 MERGE (class)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
+		);
 	}
 }
