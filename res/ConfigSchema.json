@@ -1,0 +1,20 @@
+{
+  "title": "GraPHPizer configuration schema",
+  "type": "object",
+  "properties": {
+    "matchPatterns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "excludePatterns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

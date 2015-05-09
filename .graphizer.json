@@ -1,0 +1,6 @@
+{
+  "excludePatterns": [
+    "/tests/",
+    "/vendor/"
+  ]
+}

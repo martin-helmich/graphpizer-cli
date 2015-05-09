@@ -14,6 +14,7 @@
         "everyman/neo4jphp": "*",
         "phpdocumentor/reflection-docblock": "*",
         "symfony/console": "*",
+        "justinrainbow/json-schema": "*",
         "twig/twig": "~1.0"
     },
     "require-dev": {

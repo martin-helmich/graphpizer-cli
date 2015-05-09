@@ -1,6 +1,8 @@
 <?php
 namespace Helmich\Graphizer\Writer;
 
+use Helmich\Graphizer\Configuration\ImportConfiguration;
+use Helmich\Graphizer\Configuration\ImportConfigurationReader;
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Utility\ObservableTrait;
 use PhpParser\Parser;
@@ -25,44 +27,76 @@ class FileWriter {
 	private $backend;
 
 	/**
-	 * @var array
+	 * @var ImportConfiguration
 	 */
-	private $excludePatterns;
+	private $configuration;
 
-	public function __construct(Backend $backend, NodeWriterInterface $nodeWriter, Parser $parser, array $excludePatterns = []) {
-		$this->nodeWriter = $nodeWriter;
-		$this->parser = $parser;
-		$this->backend = $backend;
-		$this->excludePatterns = $excludePatterns;
+	/**
+	 * @var ImportConfigurationReader
+	 */
+	private $configurationReader;
+
+	public function __construct(Backend $backend, NodeWriterInterface $nodeWriter, Parser $parser, ImportConfiguration $configuration, ImportConfigurationReader $configurationReader) {
+		$this->nodeWriter          = $nodeWriter;
+		$this->parser              = $parser;
+		$this->backend             = $backend;
+		$this->configuration       = $configuration;
+		$this->configurationReader = $configurationReader;
 	}
 
 	public function addFileReadListener(callable $debugListener) {
 		$this->addListener('fileRead', $debugListener);
 	}
 
-	public function readDirectory($directory) {
-		$dirIterator = new \RecursiveDirectoryIterator($directory);
-		$iteratorIterator = new \RecursiveIteratorIterator($dirIterator);
-		$regexIterator = new \RegexIterator($iteratorIterator, '/^(.*)\.php[345]?$/', \RecursiveRegexIterator::GET_MATCH);
+	public function addFileSkippedListener(callable $debugListener) {
+		$this->addListener('fileSkipped', $debugListener);
+	}
 
-		foreach ($regexIterator as $fileInfo) {
-			$this->readFile($fileInfo[0], $directory);
+	public function readDirectory($directory) {
+		$this->readDirectoryRecursive($directory, $this->configuration, $directory);
+	}
+
+	private function readDirectoryRecursive($directory, ImportConfiguration $configuration, $baseDirectory) {
+		$configurationFileName = $directory . '/.graphizer.json';
+		if (file_exists($configurationFileName)) {
+			$subConfiguration = $this->configurationReader->readConfigurationFromFile($configurationFileName);
+			$configuration    = $configuration->merge($subConfiguration);
+		}
+
+		$entries = scandir($directory);
+		foreach ($entries as $entry) {
+			if ($entry == '..' || $entry == '.') {
+				continue;
+			}
+
+			$entryPath = $directory . '/' . $entry;
+			if (is_dir($entryPath)) {
+				if ($configuration->getInterpreter()->isDirectoryEntryMatching($entry)) {
+					$this->readDirectoryRecursive($entryPath, $configuration, $baseDirectory);
+				}
+			} else {
+				$this->readFileRecursive($entryPath, $configuration, $baseDirectory);
+			}
 		}
 	}
 
 	public function readFile($filename, $baseDirectory = NULL) {
-		foreach ($this->excludePatterns as $excludePattern) {
-			if (strstr($filename, $excludePattern) !== FALSE) {
-				return NULL;
-			}
+		return $this->readFileRecursive($filename, $this->configuration, $baseDirectory);
+	}
+
+	private function readFileRecursive($filename, ImportConfiguration $configuration, $baseDirectory) {
+		if (!$configuration->getInterpreter()->isFileMatching($filename)) {
+			$this->notify('fileSkipped', $filename);
+			return NULL;
 		}
 
 		$this->notify('fileRead', $filename);
 
 		$code = file_get_contents($filename);
-		$ast = $this->parser->parse($code);
+		$ast  = $this->parser->parse($code);
 
-		$relativeFilename = $baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
+		$relativeFilename =
+			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
 
 		$collectionNode = $this->nodeWriter->writeNodeCollection($ast);
 		$collectionNode->setProperty('filename', $relativeFilename);

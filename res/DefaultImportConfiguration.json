@@ -1,0 +1,9 @@
+{
+  "matchPatterns": [
+    "/.*\\.php[3457]?$/"
+  ],
+  "excludePatterns": [
+    "/tests/",
+    "/vendor/"
+  ]
+}
