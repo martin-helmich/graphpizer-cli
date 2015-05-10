@@ -120,11 +120,11 @@ class ClassModelGenerator {
 			$innerProperty = $row->node('inner');
 
 			$properties = [
-				'public'     => ($outerProperty->getProperty('type') & Class_::MODIFIER_PUBLIC) > 0,
-				'private'    => ($outerProperty->getProperty('type') & Class_::MODIFIER_PRIVATE) > 0,
-				'protected'  => ($outerProperty->getProperty('type') & Class_::MODIFIER_PROTECTED) > 0,
-				'static'     => ($outerProperty->getProperty('type') & Class_::MODIFIER_STATIC) > 0,
-				'name'       => $innerProperty->getProperty('name'),
+				'public'    => ($outerProperty->getProperty('type') & Class_::MODIFIER_PUBLIC) > 0,
+				'private'   => ($outerProperty->getProperty('type') & Class_::MODIFIER_PRIVATE) > 0,
+				'protected' => ($outerProperty->getProperty('type') & Class_::MODIFIER_PROTECTED) > 0,
+				'static'    => ($outerProperty->getProperty('type') & Class_::MODIFIER_STATIC) > 0,
+				'name'      => $innerProperty->getProperty('name'),
 			];
 
 			if ($outerProperty->getProperty('docComment')) {
@@ -132,7 +132,8 @@ class ClassModelGenerator {
 			}
 
 			if (!$row['existing']) {
-				$result = $create->execute(['prop' => $properties, 'definition' => $classStmtNode, 'class' => $classNode]);
+				$result   =
+					$create->execute(['prop' => $properties, 'definition' => $classStmtNode, 'class' => $classNode]);
 				$property = $result[0]->node('p');
 			} else {
 				$property = $row->node('existing');
@@ -197,20 +198,61 @@ class ClassModelGenerator {
 				'abstract'  => ($methodStmt->getProperty('type') & Class_::MODIFIER_ABSTRACT) > 0,
 				'name'      => $methodStmt->getProperty('name')
 			];
-//			$method     = $this->backend->createNode($properties, 'Method');
-//			$method->relateTo($methodStmt, 'DEFINED_IN')->save();
-//			$classNode->relateTo($method, 'HAS_METHOD')->save();
 
 			$result = $create->execute(['method' => $properties, 'definition' => $methodStmt, 'class' => $classNode]);
 			$method = $result[0]->node('m');
 
 			$this->enrichNodeFromDocBlock($method, $methodStmt->getProperty('docComment'));
+
+			$paramsQuery = $this->backend->createQuery(
+				'MATCH (m)-[:SUB {type: "params"}]->()-[:HAS]->(paramDefinition) WHERE id(m)={node}
+				 OPTIONAL MATCH (paramDefinition)-[:SUB {type: "default"}]->(default)
+				 OPTIONAL MATCH (m)<-[:DEFINED_IN]-()-[:HAS_PARAMETER]->(param {name: paramDefinition.name})
+				 RETURN paramDefinition, default, param'
+			);
+
+			foreach ($paramsQuery->execute(['node' => $methodStmt]) as $row) {
+				$parameter     = $row->node('paramDefinition');
+				$default       = $row->node('default');
+				$parameterNode = $row->node('param');
+
+				$properties = [
+					'name'            => $parameter->getProperty('name'),
+					'variadic'        => $parameter->getProperty('variadic'),
+					'byRef'           => $parameter->getProperty('byRef'),
+					'hasDefaultValue' => NULL !== $default
+				];
+
+				if (NULL === $parameterNode) {
+					$parameterNode = $this->backend->createNode(
+						$properties,
+						'Parameter'
+					);
+					$parameterNode
+						->relateTo($parameter, 'DEFINED_IN')
+						->save();
+					$method
+						->relateTo($parameterNode, 'HAS_PARAMETER')
+						->save();
+				} else {
+					$parameterNode->setProperties($properties);
+				}
+
+				$parameterNode->save();
+
+				$c = 'MATCH (p)-[:DEFINED_IN]->()-[:SUB {type: "type"}]->(tname) WHERE id(p)={parameter}
+					  MERGE (t:Type {name: tname.fullName, primitive: false})
+					  MERGE (p)-[:POSSIBLE_TYPE]->(t)';
+				$this->backend->createQuery($c)->execute(['parameter' => $parameterNode]);
+			}
 		}
 	}
 
-	private function enrichNodeFromDocBlock(Node $node, $docblock) {
+	private
+	function enrichNodeFromDocBlock(Node $node, $docblock
+	) {
 		$phpdoc = new DocBlock($docblock);
-		$dirty = FALSE;
+		$dirty  = FALSE;
 
 		if (empty($phpdoc->getShortDescription()) === FALSE) {
 			$node->setProperty('shortDescription', $phpdoc->getShortDescription());
@@ -241,7 +283,9 @@ class ClassModelGenerator {
 		}
 	}
 
-	private function setNodeDataType(Node $node, $dataTypes) {
+	private
+	function setNodeDataType(Node $node, $dataTypes
+	) {
 		$imports   = $this->getImportsForContext($node);
 		$namespace = $this->getNamespaceForContext($node);
 
@@ -264,7 +308,9 @@ class ClassModelGenerator {
 	 * @param Node $node
 	 * @return Node
 	 */
-	private function getNamespaceForContext(Node $node) {
+	private
+	function getNamespaceForContext(Node $node
+	) {
 		$cypher = 'MATCH (n)-[:DEFINED_IN]->()<-[:SUB|HAS*]-(ns:Stmt_Namespace) WHERE id(n)={node} RETURN ns';
 		$query  = $this->backend->createQuery($cypher);
 		$result = $query->execute(['node' => $node]);
@@ -276,7 +322,9 @@ class ClassModelGenerator {
 		}
 	}
 
-	private function getImportsForContext(Node $node) {
+	private
+	function getImportsForContext(Node $node
+	) {
 		$cypher  =
 			'START n=node({node})
 			 MATCH (n)-[:DEFINED_IN]->()<-[:SUB|HAS*]-(ns:Stmt_Namespace)
@@ -292,7 +340,9 @@ class ClassModelGenerator {
 		return $imports;
 	}
 
-	private function getTypeNode($type, $importScope, $currentNamespace) {
+	private
+	function getTypeNode($type, $importScope, $currentNamespace
+	) {
 		$buildOrGetPrimitiveNode = function ($type, $primitive = TRUE) {
 			$cypher = 'MERGE (n:Type{name: {name}, primitive: {primitive}}) RETURN n';
 			$query  = $this->backend->createQuery($cypher, 'n');
@@ -345,7 +395,9 @@ class ClassModelGenerator {
 	/**
 	 * @param $row
 	 */
-	private function processClassLike(TypedResultRowAdapter $row) {
+	private
+	function processClassLike(TypedResultRowAdapter $row
+	) {
 		$cls = $row->node('cls');
 		$ns  = $row->node('ns');
 
