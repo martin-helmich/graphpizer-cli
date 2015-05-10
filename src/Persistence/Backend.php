@@ -41,13 +41,13 @@ class Backend {
 		$node->addLabels(array_map(function($name) { return $this->client->makeLabel($name); }, $labels));
 	}
 
-	public function createQuery($cypher, $resultVar = NULL) {
-		return new PreparedStatement($this->client, $cypher, $resultVar, $this->debugger);
+	public function createQuery($cypher, $resultVar = NULL, $includeStatistics = FALSE) {
+		return new PreparedStatement($this->client, $cypher, $resultVar, $includeStatistics, $this->debugger);
 	}
 
-	public function execute($cypher, array $args=[]) {
+	public function execute($cypher, array $args = [], $includeStatistics = FALSE) {
 		$this->debugger->queryExecuting($cypher, $args);
-		$query = new Query($this->client, $cypher, $args);
+		$query = new Query($this->client, $cypher, $args, $includeStatistics);
 		$this->client->executeCypherQuery($query);
 		$this->debugger->queryExecuted($cypher, $args);
 	}

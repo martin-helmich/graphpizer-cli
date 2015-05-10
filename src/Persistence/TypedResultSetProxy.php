@@ -16,6 +16,13 @@ class TypedResultSetProxy extends ResultSet {
 	}
 
 	/**
+	 * @return \Everyman\Neo4j\Query\QueryStatistics
+	 */
+	public function getStatistics() {
+		return $this->resultSet->getStatistics();
+	}
+
+	/**
 	 * Return the current element
 	 *
 	 * @return mixed Can return any type.

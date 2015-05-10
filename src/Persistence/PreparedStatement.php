@@ -25,13 +25,13 @@ class PreparedStatement {
 	 */
 	private $queryFactory;
 
-	public function __construct(Client $client, $cypher, $resultVar = NULL, DebuggerInterface $debugger = NULL) {
+	public function __construct(Client $client, $cypher, $resultVar = NULL, $includeStatistics = FALSE, DebuggerInterface $debugger = NULL) {
 		$this->cypher    = $cypher;
 		$this->resultVar = $resultVar;
 		$this->debugger  = $debugger ? $debugger : new NullDebugger();
 
-		$this->queryFactory = function (array $parameters) use ($client, $cypher) {
-			return new Query($client, $cypher, $parameters);
+		$this->queryFactory = function (array $parameters) use ($client, $cypher, $includeStatistics) {
+			return new Query($client, $cypher, $parameters, $includeStatistics);
 		};
 	}
 
