@@ -20,8 +20,8 @@
 
 namespace Helmich\Graphizer\Modeler;
 
-use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Relationship;
+use Helmich\Graphizer\Modeler\TypeInference\SymbolTable;
+use Helmich\Graphizer\Modeler\TypeInference\TypeInferencePass;
 use Helmich\Graphizer\Persistence\Backend;
 
 /**
@@ -67,6 +67,10 @@ class TypeResolver {
 			 MERGE (c)-[:POSSIBLE_TYPE {confidence: 1}]->(t)'
 		);
 		$this->backend->execute(
+			'MATCH (a:Expr_Array) MERGE (t:Type {name: "array", primitive: true})
+			 MERGE (a)-[:POSSIBLE_TYPE]->(t)'
+		);
+		$this->backend->execute(
 			'MATCH (c:Expr_New)-[:SUB{type: "class"}]->(n)
 			     WHERE (n:Name OR n:Name_FullyQualified) AND n.fullName IS NOT NULL
 			 MERGE (t:Type {name: n.fullName, primitive: false})
@@ -78,132 +82,20 @@ class TypeResolver {
 			 MERGE (var)-[:POSSIBLE_TYPE {confidence: 1}]->(type)'
 		);
 
-		$varQuery = $this->backend->createQuery(
-			'MATCH (c)-[:SUB|HAS*]->(var:Expr_Variable)
-			 WHERE id(c)={node}
-			 RETURN var'
-		);
-
-		$classMethodsQuery = $this->backend->createQuery(
-			'MATCH (method:Stmt_ClassMethod)<-[:SUB|HAS*]-(classStmt:Stmt_Class),
-			       (classStmt)<-[:DEFINED_IN]-(class)<-[:IS]-(type),
-			       (method)<-[:DEFINED_IN]-()-[:HAS_PARAMETER]->(param)
-			 RETURN method, classStmt, class, type, collect(param) AS parameters'
-		);
-
-		$query = function ($cypher) {
-			$q = $this->backend->createQuery($cypher, NULL, TRUE);
-			$r = $q->execute();
-
-			$stats = $r->getStatistics();
-			return
-				$stats->getRelationshipsCreated() +
-				$stats->getNodesCreated();
-		};
-
-		$scopes = [];
+		$symbolTable = new SymbolTable();
+		$pass = new TypeInferencePass($symbolTable, $this->backend);
 
 		$loopCounter = 0;
 		do {
-			$affected = 0;
-			$loopCounter++;
-
-			if ($loopCounter >= 100) {
-				throw new \Exception('Something\'s wrong!');
-			}
-
-			$affected += $query(
-				'MATCH (c:Expr_Assign)-[:SUB{type: "var"}]->(var),
-				       (c)-[:SUB{type: "expr"}]->(expr)-[:POSSIBLE_TYPE]->(type)
-				 MERGE (var)-[:POSSIBLE_TYPE]->(type)'
-			);
-
-			$affected += $query(
-				'MATCH (call:Expr_MethodCall)-[:SUB{type:"var"}]->(var)-[:POSSIBLE_TYPE]->(calleeType{primitive:false})
-				 MATCH (calleeType)-[:IS]->(:Class)-[:HAS_METHOD|EXTENDS*]->(callee:Method {name: call.name})-[:POSSIBLE_TYPE]->(calleeReturnType)
-				 MERGE (call)-[:POSSIBLE_TYPE]->(calleeReturnType)'
-			);
-
-			$affected += $query(
-				'MATCH (propFetch:Expr_PropertyFetch)-[:SUB{type: "var"}]->(var)-[:POSSIBLE_TYPE]->(parentType),
-				       (parentType)-[:IS]->(:Class)-[:HAS_PROPERTY|EXTENDS*]->(property:Property {name: propFetch.name})-[:POSSIBLE_TYPE]->(propertyType)
-				 MERGE (propFetch)-[:POSSIBLE_TYPE]->(propertyType)'
-			);
-
-			$affected += $query(
-				'MATCH (return:Stmt_Return)-[:SUB{type:"expr"}]->(expr)-[:POSSIBLE_TYPE]->(type:Type)
-				 MATCH (return)<-[:SUB|HAS*]-(methodStmt)<-[:DEFINED_IN]-(method:Method)
-				 MERGE (method)-[:POSSIBLE_TYPE]->(type)'
-			);
-
-			echo "$affected nodes/relationships affected!\n";
-
-			foreach ($classMethodsQuery->execute() as $row) {
-				$method          = $row->node('method');
-				$class = $row->node('class');
-				$classType       = $row->node('type');
-				$parameters      = $row['parameters'];
-
-				$identifier = $class->getProperty('fqcn') . '::' . $method->getProperty('name');
-
-				if (!array_key_exists($identifier, $scopes)) {
-					$scopes[$identifier] = [];
-				}
-
-				$symbols =& $scopes[$identifier];
-
-				foreach ($varQuery->execute(['node' => $method]) as $varRow) {
-					$var  = $varRow->node('var');
-					$name = $var->getProperty('name');
-
-					$symbols[$name] = [];
-				}
-
-				if (array_key_exists('this', $symbols)) {
-					$symbols['this'] = [$classType->getProperty('name') => $classType];
-				}
-
-				/** @var Node $parameter */
-				foreach ($parameters as $parameter) {
-					$paramName = $parameter->getProperty('name');
-					if (array_key_exists($paramName, $symbols)) {
-						/** @var Relationship $rel */
-						foreach ($parameter->getRelationships('POSSIBLE_TYPE', Relationship::DirectionOut) as $rel) {
-							$symbols[$paramName][$rel->getEndNode()->getProperty('name')] = $rel->getEndNode();
-						}
-					}
-				}
-
-				$assignments = $this->backend->createQuery(
-					'MATCH (m)-[:SUB|HAS*]->(assignment:Expr_Assign)-[:SUB{type: "var"}]->(var:Expr_Variable)-[:POSSIBLE_TYPE]->(type)
-					 WHERE id(m)={node}
-					 RETURN assignment, var, collect(type) AS types'
-				);
-				foreach ($assignments->execute(['node' => $method]) as $assignmentRow) {
-					$name = $assignmentRow->node('var')->getProperty('name');
-					foreach ($assignmentRow['types'] as $type) {
-						$symbols[$name][$type->getProperty('name')] = $type;
-					}
-				}
-			}
+			$pass->pass();
+			$loopCounter ++;
+			echo "Affected {$pass->affectedInLastPass()} in last pass.\n";
 		}
-		while ($affected > 0);
+		while (!$pass->isDone());
 
 		echo "Type propagation finished after $loopCounter passes!\n";
 
-		foreach ($scopes as $method => $symbols) {
-			echo "Treating method {$method}\n";
-			foreach ($symbols as $name => $possibleTypes) {
-				echo "  Found variable {$name}. Possible types: " . $this->typeListToString($possibleTypes) . "\n";
-			}
-		}
+		$symbolTable->dump();
 	}
 
-	private function typeListToString(array $types) {
-		$names = [];
-		foreach ($types as $type) {
-			$names[] = $type->getProperty('name');
-		}
-		return implode(', ', $names);
-	}
 }

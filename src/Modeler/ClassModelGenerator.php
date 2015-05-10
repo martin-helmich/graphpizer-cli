@@ -245,6 +245,10 @@ class ClassModelGenerator {
 					  MERGE (t:Type {name: tname.fullName, primitive: false})
 					  MERGE (p)-[:POSSIBLE_TYPE]->(t)';
 				$this->backend->createQuery($c)->execute(['parameter' => $parameterNode]);
+				$c = 'MATCH (p)-[:DEFINED_IN]->(pd) WHERE id(p)={parameter} AND pd.type IS NOT NULL AND NOT (pd)-[:SUB {type: "type"}]->()
+					  MERGE (t:Type {name: pd.type, primitive: true})
+					  MERGE (p)-[:POSSIBLE_TYPE]->(t)';
+				$this->backend->createQuery($c)->execute(['parameter' => $parameterNode]);
 			}
 		}
 	}
