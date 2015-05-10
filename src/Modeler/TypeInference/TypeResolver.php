@@ -18,10 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Modeler;
+namespace Helmich\Graphizer\Modeler\TypeInference;
 
-use Helmich\Graphizer\Modeler\TypeInference\SymbolTable;
-use Helmich\Graphizer\Modeler\TypeInference\TypeInferencePass;
 use Helmich\Graphizer\Persistence\Backend;
 
 /**
@@ -31,7 +29,7 @@ use Helmich\Graphizer\Persistence\Backend;
  * types (curse you, PHP) for methods, properties and variables. This is done
  * iteratively in multiple passes.
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Modeler
  */
 class TypeResolver {
@@ -83,19 +81,17 @@ class TypeResolver {
 		);
 
 		$symbolTable = new SymbolTable();
+
 		$pass = new TypeInferencePass($symbolTable, $this->backend);
 
-		$loopCounter = 0;
 		do {
 			$pass->pass();
-			$loopCounter ++;
 			echo "Affected {$pass->affectedInLastPass()} in last pass.\n";
 		}
 		while (!$pass->isDone());
 
-		echo "Type propagation finished after $loopCounter passes!\n";
+		echo "Type propagation finished after {$pass->getIterationCount()} passes!\n";
 
 		$symbolTable->dump();
 	}
-
 }

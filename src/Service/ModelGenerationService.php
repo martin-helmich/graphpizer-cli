@@ -22,7 +22,7 @@ namespace Helmich\Graphizer\Service;
 
 use Helmich\Graphizer\Modeler\ClassModelGenerator;
 use Helmich\Graphizer\Modeler\NamespaceResolver;
-use Helmich\Graphizer\Modeler\TypeResolver;
+use Helmich\Graphizer\Modeler\TypeInference\TypeResolver;
 use Helmich\Graphizer\Modeler\UsageAnalyzer;
 use Helmich\Graphizer\Persistence\Backend;
 
