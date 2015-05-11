@@ -32,7 +32,7 @@ trait AggregateableTrait {
 			$targetPropertyName = $propertyName;
 		}
 		$this->backend->execute(
-			"MATCH          (c:Class)
+			"MATCH          (c) WHERE c:Class OR c:Trait
 			 OPTIONAL MATCH (c)-[:HAS_METHOD]->(m:Method)
 			 WITH c, {$aggregation}(m.{$propertyName}) AS cc
 			 SET c.{$targetPropertyName} = cc"
