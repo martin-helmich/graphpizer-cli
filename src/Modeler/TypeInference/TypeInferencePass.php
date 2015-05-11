@@ -66,8 +66,8 @@ class TypeInferencePass {
 
 		$this->classMethodsQuery = $this->backend->createQuery(
 			'MATCH (method:Stmt_ClassMethod)<-[:SUB|HAS*]-(classStmt:Stmt_Class),
-			       (classStmt)<-[:DEFINED_IN]-(class)<-[:IS]-(type),
-			       (method)<-[:DEFINED_IN]-()-[:HAS_PARAMETER]->(param)
+			       (classStmt)<-[:DEFINED_IN]-(class)<-[:IS]-(type)
+			 OPTIONAL MATCH (method)<-[:DEFINED_IN]-()-[:HAS_PARAMETER]->(param)
 			 RETURN method, classStmt, class, type, collect(param) AS parameters'
 		);
 	}
@@ -94,10 +94,11 @@ class TypeInferencePass {
 		$this->reset();
 		$this->abortIfMaxIterationCountExceeded();
 
-		$this->propagateTypeByAssignment();
-		$this->propagateTypeByMethodCallResult();
-		$this->propagateTypeByPropertyFetch();
-		$this->propagateTypeByReturnStatement();
+		$this->propagateExprTypeByAssignment();
+		$this->propagateExprTypeByMethodCallResult();
+		$this->propagateExprTypeByPropertyFetch();
+		$this->propagateMethodTypeByReturnStatement();
+		$this->propagatePropertyTypeByAssignment();
 
 		foreach ($this->classMethodsQuery->execute() as $row) {
 			$method     = $row->node('method');
@@ -169,7 +170,7 @@ class TypeInferencePass {
 	 *
 	 * @return void
 	 */
-	private function propagateTypeByAssignment() {
+	private function propagateExprTypeByAssignment() {
 		$this->query(
 			'MATCH (c:Expr_Assign)-[:SUB{type: "var"}]->(var),
 			       (c)-[:SUB{type: "expr"}]->(expr)-[:POSSIBLE_TYPE]->(type)
@@ -183,7 +184,7 @@ class TypeInferencePass {
 	 *
 	 * @return void
 	 */
-	private function propagateTypeByMethodCallResult() {
+	private function propagateExprTypeByMethodCallResult() {
 		// Caution: Using "-[:HAS_METHOD]->" for finding methods in classes is
 		// not sufficient, since the method can also be defined in one of the
 		// parent classes. This is solved by using "-[:HAS_METHOD|EXTENDS*]->"
@@ -201,7 +202,7 @@ class TypeInferencePass {
 	 *
 	 * @return void
 	 */
-	private function propagateTypeByPropertyFetch() {
+	private function propagateExprTypeByPropertyFetch() {
 		// Mind ":HAS_METHOD" vs. ":HAS_METHOD|EXTENDS*" (see above)
 		$this->query(
 			'MATCH (propFetch:Expr_PropertyFetch)-[:SUB{type: "var"}]->(var)-[:POSSIBLE_TYPE]->(parentType),
@@ -217,7 +218,7 @@ class TypeInferencePass {
 	 *
 	 * @return void
 	 */
-	private function propagateTypeByReturnStatement() {
+	private function propagateMethodTypeByReturnStatement() {
 		$this->query(
 			'MATCH (return:Stmt_Return)-[:SUB{type:"expr"}]->(expr)-[:POSSIBLE_TYPE]->(type:Type)
 			 MATCH (return)<-[:SUB|HAS*]-(methodStmt)<-[:DEFINED_IN]-(method:Method)
@@ -254,7 +255,7 @@ class TypeInferencePass {
 	 * @param Node   $classType  The class type node (labeled ":Type")
 	 * @param Node[] $parameters Parameter definitions (labeled ":Parameter")
 	 */
-	private function populateSymbolTableForMethod(Node $class, Node $method, Node $classType, array $parameters) {
+	private function populateSymbolTableForMethod(Node $class, Node $method, Node $classType, \Traversable $parameters) {
 		$symbolTable = $this->symbolTable
 			->scope($class->getProperty('fqcn'))
 			->scope($method->getProperty('name'));
@@ -291,5 +292,27 @@ class TypeInferencePass {
 				$symbolTable->addTypeForSymbol($name, $type);
 			}
 		}
+	}
+
+	/**
+	 * Propagates property types by assignments to known types.
+	 *
+	 * @return void
+	 */
+	private function propagatePropertyTypeByAssignment() {
+		$this->query(
+			'MATCH (ass:Expr_Assign)
+			           -[:SUB{type:"var"}]->(propFetch:Expr_PropertyFetch)
+			           -[:SUB{type:"var"}]->(propVar)
+			           -[:POSSIBLE_TYPE]->(propType)
+			     WHERE (propFetch.name IS NOT NULL)
+			 MATCH (ass)
+			           -[:SUB{type: "expr"}]->(assignedExpr)
+			           -[:POSSIBLE_TYPE]->(assignedType)
+			 MATCH (propType)
+			           -[:IS]->(propClass)
+			           -[:HAS_PROPERTY|EXTENDS*]->(assignedProperty:Property{name: propFetch.name})
+			 MERGE (assignedProperty)-[:POSSIBLE_TYPE]->(assignedType)'
+		);
 	}
 }
