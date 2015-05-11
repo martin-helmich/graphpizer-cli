@@ -29,9 +29,11 @@ class JsonExporter implements ExporterInterface {
 			}, $node->getLabels());
 
 			$nodes[$c] = [
-				'id'   => $node->getId(),
-				'fqcn' => $node->getProperty('fqcn'),
-				'type' => in_array('Class', $labels) ? 'class' : (in_array('Interface', $labels) ? 'Interface' : 'Trait')
+				'id'                   => $node->getId(),
+				'fqcn'                 => $node->getProperty('fqcn'),
+				'type'                 => in_array('Class', $labels) ? 'class' : (in_array('Interface', $labels) ? 'Interface' : 'Trait'),
+				'nodeCount'            => $node->getProperty('nodeCount'),
+				'cyclomaticComplexity' => $node->getProperty('cyclomaticComplexity'),
 			];
 			$idMap[$node->getId()] = $c;
 
