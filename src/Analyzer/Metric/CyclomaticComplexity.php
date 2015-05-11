@@ -55,4 +55,11 @@ class CyclomaticComplexity implements Metric {
 	public function getName() {
 		return 'cyclometric complexity';
 	}
+
+	/**
+	 * @return Backend
+	 */
+	protected function getBackend() {
+		return $this->backend;
+	}
 }

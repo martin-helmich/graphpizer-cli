@@ -52,4 +52,11 @@ class NodeCount implements Metric {
 	public function getName() {
 		return 'node count';
 	}
+
+	/**
+	 * @return Backend
+	 */
+	protected function getBackend() {
+		return $this->backend;
+	}
 }

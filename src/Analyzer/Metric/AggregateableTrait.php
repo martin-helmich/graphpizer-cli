@@ -24,14 +24,16 @@ use Helmich\Graphizer\Persistence\Backend;
 
 trait AggregateableTrait {
 
-	/** @var Backend */
-	protected $backend;
+	/**
+	 * @return Backend
+	 */
+	abstract protected function getBackend();
 
 	protected function aggregate($propertyName, $targetPropertyName = NULL, $aggregation = 'SUM') {
 		if (NULL === $targetPropertyName) {
 			$targetPropertyName = $propertyName;
 		}
-		$this->backend->execute(
+		$this->getBackend()->execute(
 			"MATCH          (c) WHERE c:Class OR c:Trait
 			 OPTIONAL MATCH (c)-[:HAS_METHOD]->(m:Method)
 			 WITH c, {$aggregation}(m.{$propertyName}) AS cc
