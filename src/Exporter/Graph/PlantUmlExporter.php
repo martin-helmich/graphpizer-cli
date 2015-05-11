@@ -96,10 +96,19 @@ class PlantUmlExporter implements ExporterInterface {
 				/** @var Relationship $rel */
 				foreach ($node->getRelationships('HAS_PROPERTY', Relationship::DirectionOut) as $rel) {
 					$property = $rel->getEndNode();
+
+					$typeRelations = $property->getRelationships('POSSIBLE_TYPE', Relationship::DirectionOut);
+					$types         = [];
+					/** @var Relationship $typeRelation */
+					foreach ($typeRelations as $typeRelation) {
+						$types[] = $typeRelation->getEndNode();
+					}
+
 					$output .= sprintf(
-						"    %s %s\n",
+						"    %s %s%s\n",
 						$this->convertNodeVisibility($property),
-						$property->getProperty('name')
+						$property->getProperty('name'),
+						count($types) ? (' : ' . $this->renderTypeList($types)) : ''
 					);
 				}
 			}
@@ -108,10 +117,46 @@ class PlantUmlExporter implements ExporterInterface {
 				/** @var Relationship $rel */
 				foreach ($node->getRelationships('HAS_METHOD', Relationship::DirectionOut) as $rel) {
 					$method = $rel->getEndNode();
+
+					$paramRelations   = $method->getRelationships('HAS_PARAMETER', Relationship::DirectionOut);
+					$paramDefinitions = [];
+
+					/** @var Relationship $paramRelation */
+					foreach ($paramRelations as $paramRelation) {
+						$param         = $paramRelation->getEndNode();
+						$typeRelations = $param->getRelationships('POSSIBLE_TYPE', Relationship::DirectionOut);
+						$types         = [];
+						/** @var Relationship $typeRelation */
+						foreach ($typeRelations as $typeRelation) {
+							$type = $typeRelation->getEndNode();
+							if ($type->getProperty('name') !== 'null') {
+								$types[] = $type;
+							}
+						}
+
+						$paramDefinition = $param->getProperty('name');
+						if (count($types)) {
+							$paramDefinition .= ' : ' . $this->renderTypeList($types);
+						}
+						$paramDefinitions[] = $paramDefinition;
+					}
+
+					$typeRelations = $method->getRelationships('POSSIBLE_TYPE', Relationship::DirectionOut);
+					$types         = [];
+					/** @var Relationship $typeRelation */
+					foreach ($typeRelations as $typeRelation) {
+						$type = $typeRelation->getEndNode();
+						if ($type->getProperty('name') !== 'null') {
+							$types[] = $type;
+						}
+					}
+
 					$output .= sprintf(
-						"    %s %s()\n",
+						"    %s %s(%s)%s\n",
 						$this->convertNodeVisibility($method),
-						$method->getProperty('name')
+						$method->getProperty('name'),
+						implode(', ', $paramDefinitions),
+						count($types) ? (' : ' . $this->renderTypeList($types)) : ''
 					);
 				}
 			}
@@ -148,6 +193,18 @@ class PlantUmlExporter implements ExporterInterface {
 
 		$output .= "@enduml\n";
 		return $output;
+	}
+
+	private function renderTypeList($types) {
+		return implode(
+			'|',
+			array_map(
+				function (Node $type) {
+					return $type->getProperty('name');
+				},
+				$types
+			)
+		);
 	}
 
 	private function convertNodeVisibility(Node $node) {

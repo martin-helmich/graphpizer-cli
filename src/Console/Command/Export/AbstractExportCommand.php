@@ -44,6 +44,6 @@ abstract class AbstractExportCommand extends AbstractCommand {
 		return (new ExportConfiguration())
 			->setWithMethods($input->getOption('with-methods'))
 			->setWithUsages($input->getOption('with-usages'))
-			->setWithUsages($input->getOption('with-properties'));
+			->setWithProperties($input->getOption('with-properties'));
 	}
 }
