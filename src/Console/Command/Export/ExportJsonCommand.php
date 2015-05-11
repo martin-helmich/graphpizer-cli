@@ -16,6 +16,12 @@ class ExportJsonCommand extends AbstractExportCommand {
 			->addOption('pretty', NULL, InputOption::VALUE_NONE, 'Pretty-print the generated JSON');
 	}
 
+	protected function buildExportConfiguration(InputInterface $input) {
+		$config = parent::buildExportConfiguration($input);
+		$config->setPretty($input->getOption('pretty'));
+		return $config;
+	}
+
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$backend  = $this->connect($input, $output);
 		$exporter = new JsonExporter($backend);
