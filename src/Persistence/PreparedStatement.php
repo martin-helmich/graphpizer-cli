@@ -105,7 +105,14 @@ END;
 		$this->debugger->queryExecuting($this->cypher, $parameters);
 
 		$query  = call_user_func($this->queryFactory, $parameters);
-		$result = new TypedResultSetProxy($query->getResultSet());
+
+		try {
+			$result = new TypedResultSetProxy($query->getResultSet());
+		} catch (\Exception $e) {
+			echo $this->cypher;
+			var_dump($parameters);
+			throw $e;
+		}
 
 		$this->debugger->queryExecuted($this->cypher, $parameters);
 

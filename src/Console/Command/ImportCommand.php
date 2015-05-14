@@ -40,6 +40,10 @@ class ImportCommand extends AbstractCommand {
 			};
 		}
 
+		$errorCallback = function ($file, \Exception $error) use ($output) {
+			$output->writeln('<error>Error while parsing: ' . $error->getMessage() . '</error>');
+		};
+
 		$configurationReader  = new ImportConfigurationReader();
 		$defaultConfiguration =
 			$configurationReader->readConfigurationFromFile(__DIR__ . '/../../../res/DefaultImportConfiguration.json');
@@ -54,7 +58,8 @@ class ImportCommand extends AbstractCommand {
 			$input->getArgument('dir'),
 			$input->getOption('prune'),
 			$defaultConfiguration->merge($userConfiguration),
-			$debugCallback
+			$debugCallback,
+			$errorCallback
 		);
 
 		$output->writeln('Processed <comment>' . $count . '</comment> files.');

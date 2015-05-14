@@ -2,6 +2,8 @@
 namespace Helmich\Graphizer\Modeler;
 
 use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Op\MatchNodeByNode;
+use Helmich\Graphizer\Persistence\Op\UpdateNode;
 use Helmich\Graphizer\Writer\Bulk;
 
 class NamespaceResolver {
@@ -59,17 +61,20 @@ class NamespaceResolver {
 				$nameString = $name->getProperty('allParts');
 				$id = uniqid('node');
 				if (array_key_exists($nameString, $knownAliases)) {
-					$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
-					$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $knownAliases[$nameString]]);
+//					$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
+					$writeBulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $knownAliases[$nameString]]));
+//					$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $knownAliases[$nameString]]);
 				} else {
 					if ($namespace->getProperty('name')) {
-						$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
-						$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $namespace->getProperty('name'). '\\' . $nameString]);
+						$writeBulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $namespace->getProperty('name'). '\\' . $nameString]));
+//						$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
+//						$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $namespace->getProperty('name'). '\\' . $nameString]);
 					}
 				}
 			}
 		}
 
-		$readBulk->merge($writeBulk)->evaluate();
+		$writeBulk->evaluate();
+//		$readBulk->merge($writeBulk)->evaluate();
 	}
 }

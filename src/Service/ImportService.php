@@ -23,7 +23,12 @@ class ImportService {
 		$this->configurationReader = $configurationReader;
 	}
 
-	public function importSourceFiles(array $sourceFiles, $pruneFirst = FALSE, ImportConfiguration $configuration = NULL, callable $debugCallback = NULL) {
+	public function importSourceFiles(array $sourceFiles,
+		$pruneFirst = FALSE,
+		ImportConfiguration $configuration = NULL,
+		callable $debugCallback = NULL,
+		callable $errorCallback = NULL
+	) {
 		if ($pruneFirst) {
 			$this->backend->wipe();
 		}
@@ -39,6 +44,10 @@ class ImportService {
 
 		if (NULL !== $debugCallback) {
 			$fileWriter->addFileReadListener($debugCallback);
+		}
+
+		if (NULL !== $errorCallback) {
+			$fileWriter->addFileFailedListener($errorCallback);http://www.itfoo.de/web/typo3-trustedhostspattern/
 		}
 
 		foreach ($sourceFiles as $path) {

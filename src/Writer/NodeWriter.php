@@ -21,6 +21,10 @@ namespace Helmich\Graphizer\Writer;
 
 use Everyman\Neo4j\Node as NeoNode;
 use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Op\CreateEdge;
+use Helmich\Graphizer\Persistence\Op\CreateNode;
+use Helmich\Graphizer\Persistence\Op\NodeMatcher;
+use Helmich\Graphizer\Persistence\Op\ReturnObject;
 use PhpParser\Node;
 
 class NodeWriter implements NodeWriterInterface {
@@ -41,37 +45,42 @@ class NodeWriter implements NodeWriterInterface {
 	}
 
 	public function writeNodeCollection(array $nodes) {
-		$colId = uniqid('node');
+//		$colId = uniqid('node');
+		$collectionOp = new CreateNode('Collection', ['fileRoot' => TRUE]);
 
 		$bulk = new Bulk($this->backend);
-		$bulk->push("CREATE ({$colId}:Collection{fileRoot: true})");
+		$bulk->push($collectionOp);
 
 		$i = 0;
 		foreach ($nodes as $node) {
-			$nodeId = $this->writeNodeInner($node, $bulk);
-			$bulk->push("CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
+			$nodeOp = $this->writeNodeInner($node, $bulk);
+			$bulk->push($collectionOp->relate('HAS', $nodeOp, ['ordering' => $i]));
+//			$bulk->push(new CreateEdge($collectionOp, $nodeOp, 'HAS', ['ordering' => $i]));
+//			$bulk->push("CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
 
 			$i++;
 		}
 
-		$bulk->push("RETURN ${colId}");
+		$bulk->push(new ReturnObject($collectionOp));
+//		$bulk->push("RETURN ${colId}");
 
-		return $bulk->evaluate()[0]->node($colId);
+		return $bulk->evaluate()[0]->node($collectionOp->getId());
 	}
 
 	public function writeNode(Node $node) {
 		$bulk = new Bulk($this->backend);
 
-		$nodeId = $this->writeNodeInner($node, $bulk);
+		$nodeOp = $this->writeNodeInner($node, $bulk);
 
-		$bulk->push("RETURN ${nodeId}");
-		return $bulk->evaluate()[0]->node($nodeId);
+		$bulk->push(new ReturnObject($nodeOp));
+//		$bulk->push("RETURN ${nodeId}");
+		return $bulk->evaluate()[0]->node($nodeOp->getId());
 	}
 
 	/**
 	 * @param Node $node
 	 * @param Bulk $bulk
-	 * @return NeoNode
+	 * @return NodeMatcher
 	 */
 	public function writeNodeInner(Node $node, Bulk $bulk) {
 		$commentText = $node->getDocComment() ? $node->getDocComment()->getText() : NULL;
@@ -89,62 +98,80 @@ class NodeWriter implements NodeWriterInterface {
 			$properties['__dummy'] = 1;
 		}
 
-		$nodeId = uniqid('node');
-		$args   = ["prop_{$nodeId}" => $properties];
-		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
+//		$nodeId = uniqid('node');
+//		$args   = ["prop_{$nodeId}" => $properties];
+//		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
 
-		$bulk->push($cypher, $args);
+		$createOp = new CreateNode($node->getType(), $properties);
+		$bulk->push($createOp);
 
-		$this->storeNodeComments($node, $nodeId, $bulk);
+//		$bulk->push($cypher, $args);
+
+		$this->storeNodeComments($node, $createOp, $bulk);
 
 		foreach ($node->getSubNodeNames() as $subNodeName) {
 			$subNode = $node->{$subNodeName};
 			if (is_array($subNode)) {
 				if ($this->isScalarArray($subNode)) {
 					if (!empty($subNode)) {
-						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
+						$createOp->setProperty($subNodeName, $subNode);
+//						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
 					} else {
-						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => '~~EMPTY_ARRAY~~']);
+						$createOp->setProperty($subNodeName, '~~EMPTY_ARRAY~~');
+//						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => '~~EMPTY_ARRAY~~']);
 					}
 				} else {
 					$collection   = NULL;
-					$collectionId = NULL;
+//					$collectionId = NULL;
+					$collectionOp = NULL;
 
 					foreach ($subNode as $i => $realSubNode) {
-						if ($collectionId === NULL) {
-							$collectionId = uniqid('node');
-							$cypher       = "CREATE ({$collectionId}:Collection)";
-							$bulk->push($cypher);
+						if ($collectionOp === NULL) {
+//							$collectionId = uniqid('node');
+//							$cypher       = "CREATE ({$collectionId}:Collection)";
+							$collectionOp = new CreateNode('Collection');
+							$bulk->push($collectionOp);
+//							$bulk->push($cypher);
 						}
 
 						if (is_scalar($realSubNode)) {
-							$subNodeId = uniqid('node');
-							$bulk->push(
-								"CREATE (${subNodeId}:Literal{prop_{$subNodeId}})",
-								["prop_{$subNodeId}" => ['value' => $realSubNode]]
-							);
+//							$subNodeId = uniqid('node');
+							$subNodeOp = new CreateNode('Literal', ['value' => $realSubNode]);
+							$bulk->push($subNodeOp);
+//							$bulk->push(
+//								"CREATE (${subNodeId}:Literal{prop_{$subNodeId}})",
+//								["prop_{$subNodeId}" => ['value' => $realSubNode]]
+//							);
 						} else if ($realSubNode === NULL) {
 							continue;
 						} else {
-							$subNodeId = $this->writeNodeInner($realSubNode, $bulk);
+							$subNodeOp = $this->writeNodeInner($realSubNode, $bulk);
 						}
 
-						$bulk->push("CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
+						$bulk->push($collectionOp->relate('HAS', $subNodeOp, ['ordering' => $i]));
+//						$bulk->push(new CreateEdge($collectionOp, $subNodeOp, 'HAS', ['ordering' => $i]));
+//						$bulk->push("CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
 					}
 
-					if ($collectionId !== NULL) {
-						$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$collectionId})");
+					if ($collectionOp !== NULL) {
+						$bulk->push($createOp->relate('SUB', $collectionOp, ['type' => $subNodeName]));
+//						$bulk->push(new CreateEdge($createOp, $collectionOp, 'SUB'));
+//						$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$collectionId})");
 					}
 				}
 			} elseif ($subNode instanceof Node) {
-				$subNodeId = $this->writeNodeInner($subNode, $bulk);
-				$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$subNodeId})");
+				$subNodeOp = $this->writeNodeInner($subNode, $bulk);
+				$bulk->push($createOp->relate('SUB', $subNodeOp, ['type' => $subNodeName]));
+//				$bulk->push(new CreateEdge($createOp, $subNodeOp, 'SUB', ['type' => $subNodeName]));
+//				$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$subNodeId})");
 			} else {
-				$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
+				$createOp->setProperty($subNodeName, $subNode);
+//				$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
 			}
 		}
 
-		return $nodeId;
+		return $createOp;
+//		return $nodeId;
 	}
 
 	private function enrichNodeProperties(Node $node, array $properties) {
@@ -175,11 +202,13 @@ class NodeWriter implements NodeWriterInterface {
 		return TRUE;
 	}
 
-	private function storeNodeComments(Node $phpNode, $nodeId, Bulk $bulk) {
+	private function storeNodeComments(Node $phpNode, NodeMatcher $nodeOp, Bulk $bulk) {
 		if ($phpNode->hasAttribute('comments')) {
 			foreach ($phpNode->getAttribute('comments') as $comment) {
-				$id = $this->commentWriter->writeComment($comment, $bulk);
-				$bulk->push("CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
+				$commentOp = $this->commentWriter->writeComment($comment, $bulk);
+				$bulk->push($nodeOp->relate('HAS_COMMENT', $commentOp));
+//				$bulk->push(new CreateEdge($nodeOp, $commentOp, 'HAS_COMMENT'));
+//				$bulk->push("CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
 			}
 		}
 	}

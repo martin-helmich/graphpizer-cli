@@ -5,6 +5,7 @@ use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Configuration\ImportConfigurationReader;
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Utility\ObservableTrait;
+use PhpParser\Error;
 use PhpParser\Parser;
 
 class FileWriter {
@@ -52,6 +53,10 @@ class FileWriter {
 		$this->addListener('fileSkipped', $debugListener);
 	}
 
+	public function addFileFailedListener(callable $listener) {
+		$this->addListener('fileFailed', $listener);
+	}
+
 	public function readDirectory($directory) {
 		$this->readDirectoryRecursive($directory, $this->configuration, $directory);
 	}
@@ -93,7 +98,12 @@ class FileWriter {
 		$this->notify('fileRead', $filename);
 
 		$code = file_get_contents($filename);
-		$ast  = $this->parser->parse($code);
+		try {
+			$ast = $this->parser->parse($code);
+		} catch (Error $parseError) {
+			$this->notify('fileFailed', $filename, $parseError);
+			return NULL;
+		}
 
 		$relativeFilename =
 			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
