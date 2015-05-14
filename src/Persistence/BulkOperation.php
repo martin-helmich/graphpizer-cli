@@ -1,14 +1,35 @@
 <?php
+
+/*
+ * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 namespace Helmich\Graphizer\Persistence;
 
 use Helmich\Graphizer\Persistence\Op\NodeMatcher;
 use Helmich\Graphizer\Persistence\Op\Operation;
 
+/**
+ * Helper class for executing a (potentially very large) set of queries
+ *
+ * @package    Helmich\Graphizer
+ * @subpackage Persistence
+ */
 class BulkOperation {
-
-	protected $cypherQueries = [];
-
-	protected $arguments = [];
 
 	/**
 	 * @var Operation[]
@@ -19,31 +40,30 @@ class BulkOperation {
 	 * @var Backend
 	 */
 	protected $backend;
+
 	/**
 	 * @var int
 	 */
 	private $chunkSize;
 
-	public function __construct(Backend $backend, array $queries = [], array $arguments = [], $chunkSize = 1000) {
-		$this->backend       = $backend;
-		$this->cypherQueries = $queries;
-		$this->arguments     = $arguments;
-		$this->chunkSize     = $chunkSize;
+	/**
+	 * @param Backend $backend
+	 * @param int     $chunkSize
+	 */
+	public function __construct(Backend $backend, $chunkSize = 1000) {
+		$this->backend   = $backend;
+		$this->chunkSize = $chunkSize;
 	}
 
-	public function merge(BulkOperation $other) {
-		$mergedQueries   = array_merge($this->cypherQueries, $other->cypherQueries);
-		$mergedArguments = array_merge($this->arguments, $other->arguments);
-
-		return new BulkOperation($this->backend, $mergedQueries, $mergedArguments);
-	}
-
+	/**
+	 * @param Operation $operation
+	 */
 	public function push(Operation $operation) {
 		$this->operations[] = $operation;
 	}
 
 	/**
-	 * @return \Helmich\Graphizer\Persistence\TypedResultRowAdapter[]
+	 * @return TypedResultRowAdapter[]
 	 */
 	public function evaluate() {
 		if (0 === count($this->operations)) {
