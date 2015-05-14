@@ -28,15 +28,12 @@ namespace Helmich\Graphizer\Persistence\Op;
  */
 class UpdateNode implements Operation {
 
+	use PropertyTrait;
+
 	/**
 	 * @var NodeMatcher
 	 */
 	private $node;
-
-	/**
-	 * @var array
-	 */
-	private $properties;
 
 	/**
 	 * @param NodeMatcher $node
@@ -77,6 +74,5 @@ class UpdateNode implements Operation {
 	public function getRequiredNodes() {
 		return [$this->node];
 	}
-
 
 }

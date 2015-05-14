@@ -28,7 +28,7 @@ namespace Helmich\Graphizer\Persistence\Op;
  */
 class CreateEdge implements Operation {
 
-	use PropertyFilter;
+	use PropertyTrait;
 
 	/** @var string */
 	private $id;
@@ -41,9 +41,6 @@ class CreateEdge implements Operation {
 
 	/** @var string */
 	private $type;
-
-	/** @var array */
-	private $properties;
 
 	/**
 	 * @param NodeMatcher $start

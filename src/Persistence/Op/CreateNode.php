@@ -19,6 +19,8 @@
  */
 
 namespace Helmich\Graphizer\Persistence\Op;
+use Helmich\Graphizer\Persistence\Op\Builder\EdgeBuilder;
+use Helmich\Graphizer\Persistence\Op\Builder\UpdateBuilder;
 
 /**
  * Creates a new node.
@@ -29,16 +31,12 @@ namespace Helmich\Graphizer\Persistence\Op;
 class CreateNode extends AbstractOperation implements NodeMatcher {
 
 	use EdgeBuilder;
-	use PropertyFilter;
+	use UpdateBuilder;
+	use PropertyTrait;
 
 	private $id;
 
 	private $labels;
-
-	/**
-	 * @var array
-	 */
-	private $properties;
 
 	/**
 	 * @param string $label
@@ -70,31 +68,6 @@ class CreateNode extends AbstractOperation implements NodeMatcher {
 	 */
 	public function addLabel($label) {
 		$this->labels[] = $label;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getProperties() {
-		return $this->properties;
-	}
-
-	/**
-	 * @param array $newProperties
-	 */
-	public function mergeProperties(array $newProperties) {
-		$this->properties = array_merge($this->properties, $this->filterProperties($newProperties));
-	}
-
-	/**
-	 * @param string $key
-	 * @param mixed  $value
-	 * @return void
-	 */
-	public function setProperty($key, $value) {
-		if ($value !== NULL) {
-			$this->properties[$key] = $value;
-		}
 	}
 
 	/**

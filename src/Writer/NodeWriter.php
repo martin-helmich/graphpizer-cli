@@ -51,7 +51,7 @@ class NodeWriter implements NodeWriterInterface {
 
 		$i = 0;
 		foreach ($nodes as $node) {
-			$bulk->push($collectionOp->relate('HAS', $this->writeNodeInner($node, $bulk), ['ordering' => $i]));
+			$bulk->push($collectionOp->relate('HAS', $this->writeNodeInner($node, $bulk))->ordering($i));
 			$i++;
 		}
 
@@ -104,7 +104,7 @@ class NodeWriter implements NodeWriterInterface {
 						}
 
 						if (is_scalar($realSubNode)) {
-							$subNodeOp = new CreateNode('Literal', ['value' => $realSubNode]);
+							$subNodeOp = (new CreateNode('Literal'))->value($realSubNode);
 							$bulk->push($subNodeOp);
 						} else if ($realSubNode === NULL) {
 							continue;
@@ -112,16 +112,16 @@ class NodeWriter implements NodeWriterInterface {
 							$subNodeOp = $this->writeNodeInner($realSubNode, $bulk);
 						}
 
-						$bulk->push($collectionOp->relate('HAS', $subNodeOp, ['ordering' => $i]));
+						$bulk->push($collectionOp->relate('HAS', $subNodeOp)->ordering($i));
 					}
 
 					if ($collectionOp !== NULL) {
-						$bulk->push($createOp->relate('SUB', $collectionOp, ['type' => $subNodeName]));
+						$bulk->push($createOp->relate('SUB', $collectionOp)->type($subNodeName));
 					}
 				}
 			} elseif ($subNode instanceof Node) {
 				$subNodeOp = $this->writeNodeInner($subNode, $bulk);
-				$bulk->push($createOp->relate('SUB', $subNodeOp, ['type' => $subNodeName]));
+				$bulk->push($createOp->relate('SUB', $subNodeOp)->type($subNodeName));
 			} else {
 				$createOp->setProperty($subNodeName, $subNode);
 			}

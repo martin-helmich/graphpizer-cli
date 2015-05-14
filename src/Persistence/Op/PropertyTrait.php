@@ -20,65 +20,62 @@
 
 namespace Helmich\Graphizer\Persistence\Op;
 
-use Everyman\Neo4j\Node;
-use Helmich\Graphizer\Persistence\Op\Builder\EdgeBuilder;
-use Helmich\Graphizer\Persistence\Op\Builder\UpdateBuilder;
-
 /**
- * Matches a node by using an already existing node object
+ * Trait containing helper methods for operations that process properties
  *
  * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
-class MatchNodeByNode extends AbstractOperation implements NodeMatcher {
-
-	use EdgeBuilder;
-	use UpdateBuilder;
-
-	/** @var string */
-	private $id;
-
-	/** @var Node */
-	private $node;
+trait PropertyTrait {
 
 	/**
-	 * @param Node $node
+	 * @var array
 	 */
-	public function __construct(Node $node) {
-		$this->node = $node;
-		$this->id   = $node->getProperty('__node_id');
+	protected $properties = [];
+
+	/**
+	 * Filters properties for being used in a Cypher query.
+	 *
+	 * Most importantly, property values *must not* be `null`. See [1] for more
+	 * information.
+	 *
+	 * [1] http://stackoverflow.com/q/30238511/1995300
+	 *
+	 * @param array $properties
+	 * @return array
+	 */
+	protected function filterProperties(array $properties) {
+		$properties = array_filter($properties, function ($value) {
+			return $value !== NULL;
+		});
+		return $properties;
 	}
 
 	/**
-	 * @return string
+	 * @return array
 	 */
-	public function getId() {
-		return $this->id;
+	public function getProperties() {
+		return $this->properties;
 	}
 
 	/**
-	 * @return string
+	 * @param string $key
+	 * @param mixed  $value
+	 * @return void
 	 */
-	public function toCypher() {
-		return sprintf(
-			'MATCH (%s) WHERE id(%s)={id_%s}',
-			$this->id,
-			$this->id,
-			$this->id
-		);
+	public function setProperty($key, $value) {
+		if ($value !== NULL) {
+			$this->properties[$key] = $value;
+		}
 	}
 
 	/**
-	 * @return string
+	 * @param string $name
+	 * @param array $values
+	 * @return self
 	 */
-	public function getArguments() {
-		return ['id_' . $this->id => $this->node->getId()];
-	}
-
-	/**
-	 * @return NodeMatcher
-	 */
-	public function getMatcher() {
+	public function __call($name, $values) {
+		$this->properties[$name] = $values[0];
 		return $this;
 	}
-}
+} 

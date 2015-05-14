@@ -18,13 +18,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Persistence\Op;
+namespace Helmich\Graphizer\Persistence\Op\Builder;
+
+use Helmich\Graphizer\Persistence\Op\NodeMatcher;
+use Helmich\Graphizer\Persistence\Op\CreateEdge;
 
 /**
  * Trait for building new outgoing edges from existing nodes
  *
  * @package    Helmich\Graphizer
- * @subpackage Persistence\Op
+ * @subpackage Persistence\Op\Builder
  */
 trait EdgeBuilder {
 

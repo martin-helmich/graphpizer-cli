@@ -18,31 +18,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Persistence\Op;
+namespace Helmich\Graphizer\Persistence\Op\Builder;
+
+use Helmich\Graphizer\Persistence\Op\NodeMatcher;
+use Helmich\Graphizer\Persistence\Op\CreateEdge;
+use Helmich\Graphizer\Persistence\Op\UpdateNode;
 
 /**
- * Trait containing helper methods for operations that process properties
+ * Trait for building update operations from existing nodes
  *
  * @package    Helmich\Graphizer
- * @subpackage Persistence\Op
+ * @subpackage Persistence\Op\Builder
  */
-trait PropertyFilter {
+trait UpdateBuilder {
 
 	/**
-	 * Filters properties for being used in a Cypher query.
-	 *
-	 * Most importantly, property values *must not* be `null`. See [1] for more
-	 * information.
-	 *
-	 * [1] http://stackoverflow.com/q/30238511/1995300
-	 *
 	 * @param array $properties
-	 * @return array
+	 * @return UpdateNode
 	 */
-	protected function filterProperties(array $properties) {
-		$properties = array_filter($properties, function ($value) {
-			return $value !== NULL;
-		});
-		return $properties;
+	public function update(array $properties = []) {
+		if ($this instanceof NodeMatcher) {
+			return new UpdateNode($this, $properties);
+		} else {
+			throw new \BadMethodCallException(
+				'The ' . self::class . ' trait can only be used in classes that implement ' . NodeMatcher::class . '!'
+			);
+		}
 	}
-} 
+}

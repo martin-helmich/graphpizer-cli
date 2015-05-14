@@ -58,12 +58,13 @@ class NamespaceResolver {
 
 			foreach ($nameQuery->execute(['node' => $namespace]) as $name) {
 				$nameString = $name->getProperty('allParts');
+				$matcher = new MatchNodeByNode($name);
 				if (array_key_exists($nameString, $knownAliases)) {
-					$bulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $knownAliases[$nameString]]));
-				} else {
-					if ($namespace->getProperty('name')) {
-						$bulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $namespace->getProperty('name'). '\\' . $nameString]));
-					}
+					$bulk->push($matcher->update()->fullName($knownAliases[$nameString]));
+//					$bulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $knownAliases[$nameString]]));
+				} elseif ($namespace->getProperty('name')) {
+					$bulk->push($matcher->update()->fullName($namespace->getProperty('name'). '\\' . $nameString));
+//					$bulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $namespace->getProperty('name'). '\\' . $nameString]));
 				}
 			}
 		}

@@ -19,6 +19,8 @@
  */
 
 namespace Helmich\Graphizer\Persistence\Op;
+use Helmich\Graphizer\Persistence\Op\Builder\EdgeBuilder;
+use Helmich\Graphizer\Persistence\Op\Builder\UpdateBuilder;
 
 
 /**
@@ -30,6 +32,7 @@ namespace Helmich\Graphizer\Persistence\Op;
 class MatchNodeByIdProperty extends AbstractOperation implements NodeMatcher {
 
 	use EdgeBuilder;
+	use UpdateBuilder;
 
 	/** @var string */
 	private $id;
