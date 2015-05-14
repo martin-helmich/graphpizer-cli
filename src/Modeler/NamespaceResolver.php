@@ -46,8 +46,7 @@ class NamespaceResolver {
 			'MATCH (ns)-[:SUB {type: "stmts"}]->()-[:SUB|HAS*]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
 		$nameQuery  = $this->backend->createQuery($nameCypher, 'name');
 
-		$readBulk = new Bulk($this->backend);
-		$writeBulk = new Bulk($this->backend);
+		$bulk = new Bulk($this->backend);
 
 		foreach ($namespaces as $row) {
 			$namespace    = $row->node('ns');
@@ -59,22 +58,16 @@ class NamespaceResolver {
 
 			foreach ($nameQuery->execute(['node' => $namespace]) as $name) {
 				$nameString = $name->getProperty('allParts');
-				$id = uniqid('node');
 				if (array_key_exists($nameString, $knownAliases)) {
-//					$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
-					$writeBulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $knownAliases[$nameString]]));
-//					$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $knownAliases[$nameString]]);
+					$bulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $knownAliases[$nameString]]));
 				} else {
 					if ($namespace->getProperty('name')) {
-						$writeBulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $namespace->getProperty('name'). '\\' . $nameString]));
-//						$readBulk->push("MATCH ({$id}) WHERE id({$id})={node{$id}}", ["node{$id}" => $name->getId()]);
-//						$writeBulk->push("SET {$id}.fullName={fullname{$id}}", ["fullname{$id}" => $namespace->getProperty('name'). '\\' . $nameString]);
+						$bulk->push(new UpdateNode(new MatchNodeByNode($name), ['fullName' => $namespace->getProperty('name'). '\\' . $nameString]));
 					}
 				}
 			}
 		}
 
-		$writeBulk->evaluate();
-//		$readBulk->merge($writeBulk)->evaluate();
+		$bulk->evaluate();
 	}
 }
