@@ -25,7 +25,7 @@ use Everyman\Neo4j\Node;
 /**
  * Matches a node by using an already existing node object
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 class MatchNodeByNode extends AbstractOperation implements NodeMatcher {
@@ -38,11 +38,17 @@ class MatchNodeByNode extends AbstractOperation implements NodeMatcher {
 	/** @var Node */
 	private $node;
 
+	/**
+	 * @param Node $node
+	 */
 	public function __construct(Node $node) {
 		$this->node = $node;
 		$this->id   = $node->getProperty('__node_id');
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getId() {
 		return $this->id;
 	}

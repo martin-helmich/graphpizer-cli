@@ -23,7 +23,7 @@ namespace Helmich\Graphizer\Persistence\Op;
 /**
  * Creates a new node.
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 class CreateNode extends AbstractOperation implements NodeMatcher {
@@ -40,12 +40,12 @@ class CreateNode extends AbstractOperation implements NodeMatcher {
 	 */
 	private $properties;
 
-	public function __construct($label, array $properties = [], $id = NULL) {
-		if ($id === NULL) {
-			$id = uniqid('node');
-		}
-
-		$this->id         = $id;
+	/**
+	 * @param string $label
+	 * @param array  $properties
+	 */
+	public function __construct($label, array $properties = []) {
+		$this->id         = uniqid('node');
 		$this->labels     = [$label];
 		$this->properties = $this->filterProperties($properties);
 	}

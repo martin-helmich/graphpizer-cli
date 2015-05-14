@@ -28,6 +28,17 @@ namespace Helmich\Graphizer\Persistence\Op;
  */
 trait PropertyFilter {
 
+	/**
+	 * Filters properties for being used in a Cypher query.
+	 *
+	 * Most importantly, property values *must not* be `null`. See [1] for more
+	 * information.
+	 *
+	 * [1] http://stackoverflow.com/q/30238511/1995300
+	 *
+	 * @param array $properties
+	 * @return array
+	 */
 	protected function filterProperties(array $properties) {
 		$properties = array_filter($properties, function ($value) {
 			return $value !== NULL;

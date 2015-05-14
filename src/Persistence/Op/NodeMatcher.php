@@ -24,7 +24,7 @@ namespace Helmich\Graphizer\Persistence\Op;
  * Interface definition for all operations that can be used to add nodes to the
  * scope (typically sth. like CREATE, MATCH or MERGE).
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 interface NodeMatcher extends Operation {

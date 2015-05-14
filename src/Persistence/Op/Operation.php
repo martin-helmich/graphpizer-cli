@@ -23,7 +23,7 @@ namespace Helmich\Graphizer\Persistence\Op;
 /**
  * Interface definition for Cypher operations
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 interface Operation {

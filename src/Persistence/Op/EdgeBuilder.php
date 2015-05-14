@@ -23,11 +23,10 @@ namespace Helmich\Graphizer\Persistence\Op;
 /**
  * Trait for building new outgoing edges from existing nodes
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 trait EdgeBuilder {
-
 
 	/**
 	 * @param string      $type
@@ -44,4 +43,4 @@ trait EdgeBuilder {
 			);
 		}
 	}
-} 
+}

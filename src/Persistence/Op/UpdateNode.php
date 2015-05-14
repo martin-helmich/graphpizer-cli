@@ -38,6 +38,10 @@ class UpdateNode implements Operation {
 	 */
 	private $properties;
 
+	/**
+	 * @param NodeMatcher $node
+	 * @param array       $properties
+	 */
 	public function __construct(NodeMatcher $node, array $properties) {
 		$this->node       = $node;
 		$this->properties = $properties;

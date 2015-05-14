@@ -45,6 +45,12 @@ class CreateEdge implements Operation {
 	/** @var array */
 	private $properties;
 
+	/**
+	 * @param NodeMatcher $start
+	 * @param NodeMatcher $end
+	 * @param string      $type
+	 * @param array       $properties
+	 */
 	public function __construct(NodeMatcher $start, NodeMatcher $end, $type, array $properties = []) {
 		$this->id         = uniqid('rel');
 		$this->start      = $start;

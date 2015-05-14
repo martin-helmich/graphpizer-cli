@@ -24,7 +24,7 @@ namespace Helmich\Graphizer\Persistence\Op;
 /**
  * Matches a node by its id property (typically `__node_id`)
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 class MatchNodeByIdProperty extends AbstractOperation implements NodeMatcher {
@@ -34,10 +34,16 @@ class MatchNodeByIdProperty extends AbstractOperation implements NodeMatcher {
 	/** @var string */
 	private $id;
 
+	/**
+	 * @param string $id
+	 */
 	public function __construct($id) {
 		$this->id = $id;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getId() {
 		return $this->id;
 	}
