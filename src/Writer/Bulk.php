@@ -41,38 +41,7 @@ class Bulk {
 
 	public function push(Operation $operation) {
 		$this->operations[] = $operation;
-//		$cypher = trim($cypher);
-//		$this->cypherQueries[] = $cypher;
-//
-//		$arguments = $this->filterNullValues($arguments);
-//
-//		$this->arguments = array_merge($this->arguments, $arguments);
 	}
-
-//	private function filterNullValues(array $arguments) {
-//		$filtered = [];
-//
-//		foreach ($arguments as $key => $value) {
-//			if (NULL !== $value) {
-//				$filtered[$key] = $value;
-//			}
-//		}
-//
-//		return $filtered;
-//	}
-
-//	public function mergeArgument($argumentName, array $values) {
-//		$values = $this->filterNullValues($values);
-//		if (array_key_exists($argumentName, $this->arguments)) {
-//			$this->arguments[$argumentName] = array_merge($this->arguments[$argumentName], $values);
-//		} else {
-//			$this->arguments[$argumentName] = $values;
-//		}
-//	}
-
-//	public function renderCypher() {
-//		return implode("\n", $this->cypherQueries);
-//	}
 
 	/**
 	 * @return \Helmich\Graphizer\Persistence\TypedResultRowAdapter[]
@@ -115,20 +84,5 @@ class Bulk {
 		}
 
 		return $lastResult;
-
-//		if (0 === count($this->cypherQueries)) {
-//			return NULL;
-//		}
-//
-//		$cypher = $this->renderCypher();
-//		$query = $this->backend->createQuery($cypher);
-//
-//		try {
-//			return $query->execute($this->arguments);
-//		} catch (\Exception $e) {
-//			echo $cypher;
-//			var_dump($this->arguments);
-//			throw $e;
-//		}
 	}
 }
