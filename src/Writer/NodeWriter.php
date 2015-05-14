@@ -20,6 +20,7 @@ namespace Helmich\Graphizer\Writer;
  */
 
 use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\BulkOperation;
 use Helmich\Graphizer\Persistence\Op\CreateNode;
 use Helmich\Graphizer\Persistence\Op\NodeMatcher;
 use Helmich\Graphizer\Persistence\Op\ReturnObject;
@@ -45,7 +46,7 @@ class NodeWriter implements NodeWriterInterface {
 	public function writeNodeCollection(array $nodes) {
 		$collectionOp = new CreateNode('Collection', ['fileRoot' => TRUE]);
 
-		$bulk = new Bulk($this->backend);
+		$bulk = new BulkOperation($this->backend);
 		$bulk->push($collectionOp);
 
 		$i = 0;
@@ -60,18 +61,18 @@ class NodeWriter implements NodeWriterInterface {
 	}
 
 	public function writeNode(Node $node) {
-		$bulk = new Bulk($this->backend);
+		$bulk = new BulkOperation($this->backend);
 		$bulk->push(new ReturnObject($nodeOp = $this->writeNodeInner($node, $bulk)));
 
 		return $bulk->evaluate()[0]->node($nodeOp->getId());
 	}
 
 	/**
-	 * @param Node $node
-	 * @param Bulk $bulk
+	 * @param Node          $node
+	 * @param BulkOperation $bulk
 	 * @return NodeMatcher
 	 */
-	public function writeNodeInner(Node $node, Bulk $bulk) {
+	public function writeNodeInner(Node $node, BulkOperation $bulk) {
 		$commentText = $node->getDocComment() ? $node->getDocComment()->getText() : NULL;
 
 		$properties = $this->getNodeProperties($node);
@@ -157,7 +158,7 @@ class NodeWriter implements NodeWriterInterface {
 		return TRUE;
 	}
 
-	private function storeNodeComments(Node $phpNode, NodeMatcher $nodeOp, Bulk $bulk) {
+	private function storeNodeComments(Node $phpNode, NodeMatcher $nodeOp, BulkOperation $bulk) {
 		if ($phpNode->hasAttribute('comments')) {
 			foreach ($phpNode->getAttribute('comments') as $comment) {
 				$commentOp = $this->commentWriter->writeComment($comment, $bulk);

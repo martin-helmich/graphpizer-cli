@@ -1,11 +1,10 @@
 <?php
-namespace Helmich\Graphizer\Writer;
+namespace Helmich\Graphizer\Persistence;
 
-use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Persistence\Op\NodeMatcher;
 use Helmich\Graphizer\Persistence\Op\Operation;
 
-class Bulk {
+class BulkOperation {
 
 	protected $cypherQueries = [];
 
@@ -32,11 +31,11 @@ class Bulk {
 		$this->chunkSize     = $chunkSize;
 	}
 
-	public function merge(Bulk $other) {
+	public function merge(BulkOperation $other) {
 		$mergedQueries   = array_merge($this->cypherQueries, $other->cypherQueries);
 		$mergedArguments = array_merge($this->arguments, $other->arguments);
 
-		return new Bulk($this->backend, $mergedQueries, $mergedArguments);
+		return new BulkOperation($this->backend, $mergedQueries, $mergedArguments);
 	}
 
 	public function push(Operation $operation) {
