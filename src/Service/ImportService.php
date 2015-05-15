@@ -5,6 +5,7 @@ use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Configuration\ImportConfigurationReader;
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Writer\FileWriterBuilder;
+use Helmich\Graphizer\Writer\FileWriterListener;
 
 class ImportService {
 
@@ -23,14 +24,16 @@ class ImportService {
 		$this->configurationReader = $configurationReader;
 	}
 
-	public function importSourceFiles(array $sourceFiles,
+	public function importSourceFiles(
+		array $sourceFiles,
 		$pruneFirst = FALSE,
 		ImportConfiguration $configuration = NULL,
-		callable $debugCallback = NULL,
-		callable $errorCallback = NULL
+		FileWriterListener $listener = NULL
 	) {
 		if ($pruneFirst) {
+			echo "Wiping... ";
 			$this->backend->wipe();
+			echo "Done\n";
 		}
 
 		if (NULL === $configuration) {
@@ -42,12 +45,8 @@ class ImportService {
 			->setConfigurationReader($this->configurationReader)
 			->build();
 
-		if (NULL !== $debugCallback) {
-			$fileWriter->addFileReadListener($debugCallback);
-		}
-
-		if (NULL !== $errorCallback) {
-			$fileWriter->addFileFailedListener($errorCallback);http://www.itfoo.de/web/typo3-trustedhostspattern/
+		if (NULL !== $listener) {
+			$fileWriter->addListener($listener);
 		}
 
 		foreach ($sourceFiles as $path) {

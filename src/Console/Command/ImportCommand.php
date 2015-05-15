@@ -3,6 +3,9 @@ namespace Helmich\Graphizer\Console\Command;
 
 use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Configuration\ImportConfigurationReader;
+use Helmich\Graphizer\Console\Listener\NormalFileWriterListener;
+use Helmich\Graphizer\Console\Listener\QuietFileWriterListener;
+use Helmich\Graphizer\Console\Listener\VerboseFileWriterListener;
 use Helmich\Graphizer\Service\ImportService;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,23 +29,8 @@ class ImportCommand extends AbstractCommand {
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		$backend = $this->connect($input, $output);
-
-		$count         = 0;
-		$debugCallback = function ($file) use (&$count) {
-			$count++;
-		};
-
-		if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-			$debugCallback = function ($file) use ($output, &$count) {
-				$output->writeln('Processing file <comment>' . $file . '</comment>');
-				$count++;
-			};
-		}
-
-		$errorCallback = function ($file, \Exception $error) use ($output) {
-			$output->writeln('<error>Error while parsing: ' . $error->getMessage() . '</error>');
-		};
+		$backend  = $this->connect($input, $output);
+		$listener = $this->buildListenerByVerbosity($output);
 
 		$configurationReader  = new ImportConfigurationReader();
 		$defaultConfiguration =
@@ -58,10 +46,25 @@ class ImportCommand extends AbstractCommand {
 			$input->getArgument('dir'),
 			$input->getOption('prune'),
 			$defaultConfiguration->merge($userConfiguration),
-			$debugCallback,
-			$errorCallback
+			$listener
 		);
+	}
 
-		$output->writeln('Processed <comment>' . $count . '</comment> files.');
+	/**
+	 * @param OutputInterface $output
+	 * @return NormalFileWriterListener|QuietFileWriterListener|VerboseFileWriterListener
+	 */
+	protected function buildListenerByVerbosity(OutputInterface $output) {
+		switch ($output->getVerbosity()) {
+			case OutputInterface::VERBOSITY_QUIET:
+				$listener = new QuietFileWriterListener($output, $this->getHelper('formatter'));
+				return $listener;
+			case OutputInterface::VERBOSITY_NORMAL:
+				$listener = new NormalFileWriterListener($output, $this->getHelper('formatter'));
+				return $listener;
+			default:
+				$listener = new VerboseFileWriterListener($output, $this->getHelper('formatter'));
+				return $listener;
+		}
 	}
 }
