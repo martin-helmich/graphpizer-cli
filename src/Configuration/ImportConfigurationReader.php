@@ -38,8 +38,8 @@ class ImportConfigurationReader {
 		}
 
 		return new ImportConfiguration(
-			$data->matchPatterns,
-			$data->excludePatterns
+			isset($data->matchPatterns) ? $data->matchPatterns : [],
+			isset($data->excludePatterns) ? $data->excludePatterns : []
 		);
 	}
 }

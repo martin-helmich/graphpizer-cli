@@ -1,6 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Tests\Functional\Modeler;
 
+use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Modeler\ClassModelGenerator;
 use Helmich\Graphizer\Modeler\NamespaceResolver;
 use Helmich\Graphizer\Persistence\Backend;
@@ -24,7 +25,11 @@ class ClassModelGeneratorTest extends AbstractFunctionalTestCase {
 		parent::setUp();
 		$backend = new Backend(static::$client);
 
-		$this->writer       = (new FileWriterBuilder($backend))->build();
+		$configuration = new ImportConfiguration(['/\.php$/']);
+
+		$this->writer       = (new FileWriterBuilder($backend))
+			->setConfiguration($configuration)
+			->build();
 		$this->modelBuilder = new ClassModelGenerator($backend, new NamespaceResolver($backend));
 
 		$this->writer->readFile(__DIR__ . '/../Fixtures/advanced_hello_world.php');
