@@ -1,10 +1,10 @@
 <?php
 namespace Helmich\Graphizer\Writer;
 
+use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
-use Helmich\Graphizer\Configuration\ImportConfigurationReader;
+use Helmich\Graphizer\Configuration\PackageConfiguration;
 use Helmich\Graphizer\Persistence\Backend;
-use Helmich\Graphizer\Utility\ObservableTrait;
 use PhpParser\Error;
 use PhpParser\Parser;
 
@@ -31,7 +31,7 @@ class FileWriter {
 	private $configuration;
 
 	/**
-	 * @var ImportConfigurationReader
+	 * @var ConfigurationReader
 	 */
 	private $configurationReader;
 
@@ -42,7 +42,7 @@ class FileWriter {
 		NodeWriterInterface $nodeWriter,
 		Parser $parser,
 		ImportConfiguration $configuration,
-		ImportConfigurationReader $configurationReader
+		ConfigurationReader $configurationReader
 	) {
 		$this->nodeWriter          = $nodeWriter;
 		$this->parser              = $parser;
@@ -57,11 +57,21 @@ class FileWriter {
 	}
 
 	public function readDirectory($directory) {
+		$directory = realpath($directory);
+
 		$this->readDirectoryRecursive($directory, $this->configuration, $directory);
 		$this->listener->onFinish($directory);
 	}
 
-	private function readDirectoryRecursive($directory, ImportConfiguration $configuration, $baseDirectory) {
+	private function readDirectoryRecursive($directory,
+		ImportConfiguration $configuration,
+		$baseDirectory,
+		PackageConfiguration $package = NULL
+	) {
+		if ($configuration->hasConfigurationForSubDirectory($directory)) {
+			$configuration = $configuration->merge($configuration->getConfigurationForSubDirectory($directory));
+		}
+
 		$configurationFileName = $directory . '/.graphizer.json';
 		if (file_exists($configurationFileName)) {
 			$this->listener->onConfigApplied($configurationFileName);
@@ -70,19 +80,28 @@ class FileWriter {
 			$configuration    = $configuration->merge($subConfiguration);
 		}
 
+		if ($configuration->hasExplicitPackageConfigured()) {
+			$package = $configuration->getPackage();
+		} else {
+			$discoveredPackage = $this->autoDiscoverPackage($directory);
+			if ($discoveredPackage !== NULL) {
+				$package = $discoveredPackage;
+			}
+		}
+
 		$entries = scandir($directory);
 		foreach ($entries as $entry) {
-			if ($entry == '..' || $entry == '.') {
+			if ($entry[0] == '.') {
 				continue;
 			}
 
 			$entryPath = $directory . '/' . $entry;
 			if (is_dir($entryPath)) {
 				if ($configuration->getInterpreter()->isDirectoryEntryMatching($entry)) {
-					$this->readDirectoryRecursive($entryPath, $configuration, $baseDirectory);
+					$this->readDirectoryRecursive($entryPath, $configuration, $baseDirectory, $package);
 				}
 			} else {
-				$this->readFileRecursive($entryPath, $configuration, $baseDirectory);
+				$this->readFileRecursive($entryPath, $configuration, $baseDirectory, $package);
 			}
 		}
 	}
@@ -93,7 +112,12 @@ class FileWriter {
 		return $result;
 	}
 
-	private function readFileRecursive($filename, ImportConfiguration $configuration, $baseDirectory) {
+	private function readFileRecursive(
+		$filename,
+		ImportConfiguration $configuration,
+		$baseDirectory,
+		PackageConfiguration $package = NULL
+	) {
 		if (!$configuration->getInterpreter()->isFileMatching($filename)) {
 			$this->listener->onFileSkipped($filename);
 			return NULL;
@@ -117,9 +141,37 @@ class FileWriter {
 		$collectionNode->setProperty('filename', $relativeFilename);
 		$collectionNode->save();
 
+		if ($package) {
+			$cypher = 'MATCH (c:Collection) WHERE id(c)={root}
+			           MERGE (p:Package {name: {pkg}.name, description: {pkg}.description})
+			           MERGE (p)-[:CONTAINS]->(c)';
+			$this->backend->createQuery($cypher)->execute(['root' => $collectionNode, 'pkg' => ['name' => $package->getName(), 'description' => $package->getDescription()]]);
+		}
+
 		$this->backend->labelNode($collectionNode, 'File');
-		$this->listener->onFileRead($filename, microtime(TRUE) - $time);
+		$this->listener->onFileRead($filename, (microtime(TRUE) - $time) * 1000);
 
 		return $collectionNode;
+	}
+
+	private function autoDiscoverPackage($directory) {
+		if (file_exists($directory . '/composer.json')) {
+			$data = json_decode($directory . '/composer.json');
+			return new PackageConfiguration(
+				$data->name,
+				isset($data->description) ? $data->description : ''
+			);
+		} else if (file_exists($directory . '/ext_emconf.php')) {
+			$_EXTKEY = dirname($directory);
+			$EM_CONF = [];
+
+			require($directory . '/ext_emconf.php');
+
+			return new PackageConfiguration(
+				$_EXTKEY,
+				$EM_CONF[$_EXTKEY]['title']
+			);
+		}
+		return NULL;
 	}
 }

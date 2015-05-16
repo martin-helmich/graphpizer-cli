@@ -1,6 +1,20 @@
 {
-  "excludePatterns": [
-    "/tests/",
-    "/vendor/"
-  ]
+    "config": {
+        "excludePatterns": [
+            "/tests/",
+            "/vendor/"
+        ],
+        "package": {
+            "name": "graphizer",
+            "description": "Store PHP syntax trees in a Neoj4 database"
+        }
+    },
+    "subConfigs": {
+        "src/Console": {
+            "package": {
+                "name": "graphizer\\cli",
+                "description": "Command line interface for GraPHPizer"
+            }
+        }
+    }
 }

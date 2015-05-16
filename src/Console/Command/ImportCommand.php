@@ -1,8 +1,9 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
+use Helmich\Graphizer\Configuration\Configuration;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
-use Helmich\Graphizer\Configuration\ImportConfigurationReader;
+use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Console\Listener\NormalFileWriterListener;
 use Helmich\Graphizer\Console\Listener\QuietFileWriterListener;
 use Helmich\Graphizer\Console\Listener\VerboseFileWriterListener;
@@ -32,14 +33,11 @@ class ImportCommand extends AbstractCommand {
 		$backend  = $this->connect($input, $output);
 		$listener = $this->buildListenerByVerbosity($output);
 
-		$configurationReader  = new ImportConfigurationReader();
+		$configurationReader  = new ConfigurationReader();
 		$defaultConfiguration =
 			$configurationReader->readConfigurationFromFile(__DIR__ . '/../../../res/DefaultImportConfiguration.json');
 
-		$userConfiguration = new ImportConfiguration(
-			[],
-			$input->getOption('exclude')
-		);
+		$userConfiguration = new Configuration([], $input->getOption('exclude'));
 
 		$importService = new ImportService($backend, $configurationReader);
 		$importService->importSourceFiles(
