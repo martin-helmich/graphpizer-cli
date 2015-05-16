@@ -41,21 +41,10 @@ class ClassModelGenerator {
 			$this->processClassLike($row);
 		}
 
-		$this->consolidateTypesWithClasses();
 		$this->findClassExtensions();
 		$this->findInterfaceImplementations();
 		$this->findTraitUsages();
 		$this->findMethodImplementations();
-	}
-
-	private function consolidateTypesWithClasses() {
-		$this->backend->execute(
-			'MATCH (c) WHERE (c:Class OR c:Interface OR c:Trait)
-			 MERGE (t:Type {name: c.fqcn, primitive: false})'
-		);
-		$this->backend->execute(
-			'MATCH (t:Type), (c) WHERE t.name = c.fqcn AND (c:Class OR c:Interface) MERGE (t)-[:IS]->(c)'
-		);
 	}
 
 	private function findTraitUsages() {
@@ -408,6 +397,8 @@ class ClassModelGenerator {
 			"MATCH (d) WHERE id(d)={definition}
 			 MERGE (c:{$label} {name: {name}, " . ($ns ? "namespace: {namespace}, " : "") . "fqcn: {fqcn}, abstract: {abstract}, final: {final}})
 			 MERGE (c)-[:DEFINED_IN]->(d)
+			 MERGE (t:Type {name: {fqcn}, primitive: false})
+			 MERGE (t)-[:IS]->(c)
 			 RETURN c"
 		);
 
