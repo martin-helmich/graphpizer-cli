@@ -351,7 +351,7 @@ class ClassModelGenerator {
 				           RETURN t';
 				$query  = $this->backend->createQuery($cypher, 't');
 
-				return $query->execute(['name' => $type, 'inner' => $inner])[0];
+				return $query->execute(['name' => $matches['outer'] . '<' . $inner->getProperty('name') . '>', 'inner' => $inner])[0];
 			}
 		}
 
