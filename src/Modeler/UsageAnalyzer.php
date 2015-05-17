@@ -18,16 +18,23 @@ class UsageAnalyzer {
 		// Register usages from constructor calls.
 		$this->backend->execute(
 			'MATCH (name)<-[:SUB {type: "class"}]-(new:Expr_New)<-[:SUB|HAS*]-(:Stmt_Class)<-[:DEFINED_IN]-(c:Class) WHERE name.fullName IS NOT NULL
-			 MERGE (type:Type{name:name.fullName, primitive: false})
+			 MERGE (type:Type {name: name.fullName, primitive: false})
 			 MERGE (type)<-[:INSTANTIATES]-(new)
 			 MERGE (c)-[r:USES]->(type) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
 		);
 
-		// Register usages from property types
+		// Register usages from property types (to-many)
 		$this->backend->execute(
-			'MATCH (p:Property)-[:POSSIBLE_TYPE]->(t) WHERE t.primitive=false
+			'MATCH (p:Property)-[:POSSIBLE_TYPE]->(:Type {collection: true})-[:IS_COLLECTION_OF]->(t:Type {primitive: false})
 			 MATCH (p)<-[:HAS_PROPERTY]-(c:Class)
-			 MERGE (c)-[r:USES]->(t) ON MATCH SET r.count = r.count + 1 ON CREATE SET r.count = 1'
+			 MERGE (c)-[r:HAS_MANY {property: p.name}]->(t)'
+		);
+
+		// Register usages from property types (to-one)
+		$this->backend->execute(
+			'MATCH (p:Property)-[:POSSIBLE_TYPE]->(t:Type {primitive: false}) WHERE t.collection <> true
+			 MATCH (p)<-[:HAS_PROPERTY]-(c:Class)
+			 MERGE (c)-[r:HAS_ONE {property: p.name}]->(t)'
 		);
 
 		// Register usages from method return types
