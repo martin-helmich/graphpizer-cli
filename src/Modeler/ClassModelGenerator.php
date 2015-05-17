@@ -325,7 +325,7 @@ class ClassModelGenerator {
 
 	/**
 	 * @param string $type
-	 * @param array $importScope
+	 * @param array  $importScope
 	 * @param string $currentNamespace
 	 * @return Node
 	 * @throws \Exception
@@ -335,7 +335,7 @@ class ClassModelGenerator {
 			$cypher = 'MERGE (n:Type{name: {name}, primitive: {primitive}, collection: {collection}}) RETURN n';
 			$query  = $this->backend->createQuery($cypher, 'n');
 
-			return $query->execute(['name' => $type, 'primitive' => $primitive])[0];
+			return $query->execute(['name' => $type, 'primitive' => $primitive, 'collection' => $collection])[0];
 		};
 
 		if (preg_match(',^(?P<inner>.+)\[\],', $type, $matches)) {
