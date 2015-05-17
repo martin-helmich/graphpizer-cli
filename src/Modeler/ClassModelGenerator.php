@@ -47,6 +47,19 @@ class ClassModelGenerator {
 		$this->findInterfaceImplementations();
 		$this->findTraitUsages();
 		$this->findMethodImplementations();
+
+		$this->backend->execute(
+			'MATCH (c:Class)-[:DEFINED_IN]->(stmt)<-[:SUB|HAS*]-(:File)<-[:CONTAINS_FILE]-(p:Package)
+			 MERGE (p)-[:CONTAINS_CLASS]->(c)'
+		);
+		$this->backend->execute(
+			'MATCH (c:Trait)-[:DEFINED_IN]->(stmt)<-[:SUB|HAS*]-(:File)<-[:CONTAINS_FILE]-(p:Package)
+			 MERGE (p)-[:CONTAINS_CLASS]->(c)'
+		);
+		$this->backend->execute(
+			'MATCH (c:Interface)-[:DEFINED_IN]->(stmt)<-[:SUB|HAS*]-(:File)<-[:CONTAINS_FILE]-(p:Package)
+			 MERGE (p)-[:CONTAINS_CLASS]->(c)'
+		);
 	}
 
 	private function findTraitUsages() {
