@@ -1,9 +1,11 @@
 {
-  "matchPatterns": [
-    "/.*\\.php[3457]?$/"
-  ],
-  "excludePatterns": [
-    "/tests/",
-    "/vendor/"
-  ]
+    "config": {
+        "matchPatterns": [
+            "/.*\\.php[3457]?$/"
+        ],
+        "excludePatterns": [
+            "/tests/",
+            "/vendor/"
+        ]
+    }
 }

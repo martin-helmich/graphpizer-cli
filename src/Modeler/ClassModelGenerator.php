@@ -28,6 +28,8 @@ class ClassModelGenerator {
 	public function run() {
 		$this->backend->execute('CREATE INDEX ON :Type(name)');
 		$this->backend->execute('CREATE INDEX ON :Class(fqcn)');
+		$this->backend->execute('CREATE INDEX ON :Interface(fqcn)');
+		$this->backend->execute('CREATE INDEX ON :Trait(fqcn)');
 
 		$this->namespaceResolver->run();
 
@@ -41,21 +43,10 @@ class ClassModelGenerator {
 			$this->processClassLike($row);
 		}
 
-		$this->consolidateTypesWithClasses();
 		$this->findClassExtensions();
 		$this->findInterfaceImplementations();
 		$this->findTraitUsages();
 		$this->findMethodImplementations();
-	}
-
-	private function consolidateTypesWithClasses() {
-		$this->backend->execute(
-			'MATCH (c) WHERE (c:Class OR c:Interface OR c:Trait)
-			 MERGE (t:Type {name: c.fqcn, primitive: false})'
-		);
-		$this->backend->execute(
-			'MATCH (t:Type), (c) WHERE t.name = c.fqcn AND (c:Class OR c:Interface) MERGE (t)-[:IS]->(c)'
-		);
 	}
 
 	private function findTraitUsages() {
@@ -332,13 +323,37 @@ class ClassModelGenerator {
 		return $imports;
 	}
 
+	/**
+	 * @param string $type
+	 * @param array $importScope
+	 * @param string $currentNamespace
+	 * @return Node
+	 * @throws \Exception
+	 */
 	private function getTypeNode($type, $importScope, $currentNamespace) {
-		$buildOrGetPrimitiveNode = function ($type, $primitive = TRUE) {
-			$cypher = 'MERGE (n:Type{name: {name}, primitive: {primitive}}) RETURN n';
+		$buildOrGetPrimitiveNode = function ($type, $primitive = TRUE, $collection = FALSE) {
+			$cypher = 'MERGE (n:Type{name: {name}, primitive: {primitive}, collection: {collection}}) RETURN n';
 			$query  = $this->backend->createQuery($cypher, 'n');
 
 			return $query->execute(['name' => $type, 'primitive' => $primitive])[0];
 		};
+
+		if (preg_match(',^(?P<inner>.+)\[\],', $type, $matches)) {
+			$type = 'array<' . $matches['inner'] . '>';
+		}
+
+		if (preg_match(',^(?P<outer>.+)<(?P<inner>.+)>$,', $type, $matches)) {
+			$inner = $this->getTypeNode($matches['inner'], $importScope, $currentNamespace);
+			if ($inner !== NULL) {
+				$cypher = 'MATCH (inner:Type) WHERE id(inner)={inner}
+				           MERGE (t:Type {name: {name}, primitive: false, collection: true})
+				           MERGE (t)-[:IS_COLLECTION_OF]->(inner)
+				           RETURN t';
+				$query  = $this->backend->createQuery($cypher, 't');
+
+				return $query->execute(['name' => $type, 'inner' => $inner])[0];
+			}
+		}
 
 		switch (strtolower($type)) {
 			case 'int':
@@ -359,9 +374,11 @@ class ClassModelGenerator {
 			case 'nil':
 				return $buildOrGetPrimitiveNode('null');
 			case 'array':
-				return $buildOrGetPrimitiveNode('array');
+				return $buildOrGetPrimitiveNode('array', TRUE, TRUE);
 			case 'callable':
 				return $buildOrGetPrimitiveNode('callable');
+			case 'object':
+				return $buildOrGetPrimitiveNode('object');
 			case 'mixed':
 				return NULL;
 			default:
@@ -408,6 +425,8 @@ class ClassModelGenerator {
 			"MATCH (d) WHERE id(d)={definition}
 			 MERGE (c:{$label} {name: {name}, " . ($ns ? "namespace: {namespace}, " : "") . "fqcn: {fqcn}, abstract: {abstract}, final: {final}})
 			 MERGE (c)-[:DEFINED_IN]->(d)
+			 MERGE (t:Type {name: {fqcn}, primitive: false})
+			 MERGE (t)-[:IS]->(c)
 			 RETURN c"
 		);
 

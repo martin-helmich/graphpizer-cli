@@ -19,8 +19,11 @@ namespace Helmich\Graphizer\Writer;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Everyman\Neo4j\Node as NeoNode;
 use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\BulkOperation;
+use Helmich\Graphizer\Persistence\Op\CreateNode;
+use Helmich\Graphizer\Persistence\Op\NodeMatcher;
+use Helmich\Graphizer\Persistence\Op\ReturnObject;
 use PhpParser\Node;
 
 class NodeWriter implements NodeWriterInterface {
@@ -41,39 +44,35 @@ class NodeWriter implements NodeWriterInterface {
 	}
 
 	public function writeNodeCollection(array $nodes) {
-		$colId = uniqid('node');
+		$collectionOp = new CreateNode('Collection', ['fileRoot' => TRUE]);
 
-		$bulk = new Bulk($this->backend);
-		$bulk->push("CREATE ({$colId}:Collection{fileRoot: true})");
+		$bulk = new BulkOperation($this->backend);
+		$bulk->push($collectionOp);
 
 		$i = 0;
 		foreach ($nodes as $node) {
-			$nodeId = $this->writeNodeInner($node, $bulk);
-			$bulk->push("CREATE ({$colId})-[:HAS{ordering: {$i}}]->({$nodeId})");
-
+			$bulk->push($collectionOp->relate('HAS', $this->writeNodeInner($node, $bulk))->ordering($i));
 			$i++;
 		}
 
-		$bulk->push("RETURN ${colId}");
+		$bulk->push(new ReturnObject($collectionOp));
 
-		return $bulk->evaluate()[0]->node($colId);
+		return $bulk->evaluate()[0]->node($collectionOp->getId());
 	}
 
 	public function writeNode(Node $node) {
-		$bulk = new Bulk($this->backend);
+		$bulk = new BulkOperation($this->backend);
+		$bulk->push(new ReturnObject($nodeOp = $this->writeNodeInner($node, $bulk)));
 
-		$nodeId = $this->writeNodeInner($node, $bulk);
-
-		$bulk->push("RETURN ${nodeId}");
-		return $bulk->evaluate()[0]->node($nodeId);
+		return $bulk->evaluate()[0]->node($nodeOp->getId());
 	}
 
 	/**
-	 * @param Node $node
-	 * @param Bulk $bulk
-	 * @return NeoNode
+	 * @param Node          $node
+	 * @param BulkOperation $bulk
+	 * @return NodeMatcher
 	 */
-	public function writeNodeInner(Node $node, Bulk $bulk) {
+	public function writeNodeInner(Node $node, BulkOperation $bulk) {
 		$commentText = $node->getDocComment() ? $node->getDocComment()->getText() : NULL;
 
 		$properties = $this->getNodeProperties($node);
@@ -83,68 +82,52 @@ class NodeWriter implements NodeWriterInterface {
 			$properties['docComment'] = $commentText;
 		}
 
-		// We need to add a dummy value when the property array is empty, otherwise
-		// Neo4j will not create the node
-		if (empty($properties)) {
-			$properties['__dummy'] = 1;
-		}
-
-		$nodeId = uniqid('node');
-		$args   = ["prop_{$nodeId}" => $properties];
-		$cypher = "CREATE ({$nodeId}:{$node->getType()}{prop_{$nodeId}}) ";
-
-		$bulk->push($cypher, $args);
-
-		$this->storeNodeComments($node, $nodeId, $bulk);
+		$bulk->push($createOp = new CreateNode($node->getType(), $properties));
+		$this->storeNodeComments($node, $createOp, $bulk);
 
 		foreach ($node->getSubNodeNames() as $subNodeName) {
 			$subNode = $node->{$subNodeName};
 			if (is_array($subNode)) {
 				if ($this->isScalarArray($subNode)) {
 					if (!empty($subNode)) {
-						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
+						$createOp->setProperty($subNodeName, $subNode);
 					} else {
-						$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => '~~EMPTY_ARRAY~~']);
+						$createOp->setProperty($subNodeName, '~~EMPTY_ARRAY~~');
 					}
 				} else {
-					$collection   = NULL;
-					$collectionId = NULL;
+					$collectionOp = NULL;
 
 					foreach ($subNode as $i => $realSubNode) {
-						if ($collectionId === NULL) {
-							$collectionId = uniqid('node');
-							$cypher       = "CREATE ({$collectionId}:Collection)";
-							$bulk->push($cypher);
+						if ($collectionOp === NULL) {
+							$collectionOp = new CreateNode('Collection');
+							$bulk->push($collectionOp);
 						}
 
 						if (is_scalar($realSubNode)) {
-							$subNodeId = uniqid('node');
-							$bulk->push(
-								"CREATE (${subNodeId}:Literal{prop_{$subNodeId}})",
-								["prop_{$subNodeId}" => ['value' => $realSubNode]]
-							);
+							$subNodeOp = (new CreateNode('Literal'))->value($realSubNode);
+							$bulk->push($subNodeOp);
 						} else if ($realSubNode === NULL) {
 							continue;
 						} else {
-							$subNodeId = $this->writeNodeInner($realSubNode, $bulk);
+							$subNodeOp = $this->writeNodeInner($realSubNode, $bulk);
 						}
 
-						$bulk->push("CREATE ({$collectionId})-[:HAS{ordering: $i}]->({$subNodeId})");
+						$bulk->push($collectionOp->relate('HAS', $subNodeOp)->ordering($i));
 					}
 
-					if ($collectionId !== NULL) {
-						$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$collectionId})");
+					if ($collectionOp !== NULL) {
+						$bulk->push($createOp->relate('SUB', $collectionOp)->type($subNodeName));
 					}
 				}
 			} elseif ($subNode instanceof Node) {
-				$subNodeId = $this->writeNodeInner($subNode, $bulk);
-				$bulk->push("CREATE ({$nodeId})-[:SUB{type: \"{$subNodeName}\"}]->({$subNodeId})");
+				$subNodeOp = $this->writeNodeInner($subNode, $bulk);
+				$bulk->push($createOp->relate('SUB', $subNodeOp)->type($subNodeName));
 			} else {
-				$bulk->mergeArgument("prop_{$nodeId}", [$subNodeName => $subNode]);
+				$createOp->setProperty($subNodeName, $subNode);
 			}
 		}
 
-		return $nodeId;
+		return $createOp;
 	}
 
 	private function enrichNodeProperties(Node $node, array $properties) {
@@ -175,11 +158,11 @@ class NodeWriter implements NodeWriterInterface {
 		return TRUE;
 	}
 
-	private function storeNodeComments(Node $phpNode, $nodeId, Bulk $bulk) {
+	private function storeNodeComments(Node $phpNode, NodeMatcher $nodeOp, BulkOperation $bulk) {
 		if ($phpNode->hasAttribute('comments')) {
 			foreach ($phpNode->getAttribute('comments') as $comment) {
-				$id = $this->commentWriter->writeComment($comment, $bulk);
-				$bulk->push("CREATE ({$nodeId})-[:HAS_COMMENT]->({$id})");
+				$commentOp = $this->commentWriter->writeComment($comment, $bulk);
+				$bulk->push($nodeOp->relate('HAS_COMMENT', $commentOp));
 			}
 		}
 	}

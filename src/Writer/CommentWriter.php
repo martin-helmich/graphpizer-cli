@@ -2,6 +2,9 @@
 namespace Helmich\Graphizer\Writer;
 
 use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\BulkOperation;
+use Helmich\Graphizer\Persistence\Op\CreateNode;
+use Helmich\Graphizer\Persistence\Op\NodeMatcher;
 use PhpParser\Comment;
 
 class CommentWriter {
@@ -15,25 +18,21 @@ class CommentWriter {
 		$this->backend = $backend;
 	}
 
-	public function writeComment(Comment $comment, Bulk $bulk) {
-		$id = uniqid('node');
+	/**
+	 * @param Comment       $comment
+	 * @param BulkOperation $bulk
+	 * @return NodeMatcher
+	 */
+	public function writeComment(Comment $comment, BulkOperation $bulk) {
+		$properties = ['text' => $comment->getText(), 'line' => $comment->getLine()];
+		$commentOp  = new CreateNode('Comment', $properties);
 
-		$label = 'Comment';
 		if ($comment instanceof Comment\Doc) {
-			$label .= ':DocComment';
+			$commentOp->addLabel('DocComment');
 		}
 
-		$cypher = "CREATE ({$id}:{$label} {prop_{$id}})";
-		$bulk->push($cypher, ["prop_{$id}" => ['text' => $comment->getText(), 'line' => $comment->getLine()]]);
+		$bulk->push($commentOp);
 
-		return $id;
-
-//		$node = $this->backend->createNode(['text' => $comment->getText(), 'line' => $comment->getLine()], 'Comment');
-//
-//		if ($comment instanceof Comment\Doc) {
-//			$this->backend->labelNode($node, 'DocComment');
-//		}
-//
-//		return $node;
+		return $commentOp;
 	}
 }

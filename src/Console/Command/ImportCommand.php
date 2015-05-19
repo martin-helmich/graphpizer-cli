@@ -1,8 +1,12 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
+use Helmich\Graphizer\Configuration\Configuration;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
-use Helmich\Graphizer\Configuration\ImportConfigurationReader;
+use Helmich\Graphizer\Configuration\ConfigurationReader;
+use Helmich\Graphizer\Console\Listener\NormalFileWriterListener;
+use Helmich\Graphizer\Console\Listener\QuietFileWriterListener;
+use Helmich\Graphizer\Console\Listener\VerboseFileWriterListener;
 use Helmich\Graphizer\Service\ImportService;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,37 +30,39 @@ class ImportCommand extends AbstractCommand {
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		$backend = $this->connect($input, $output);
+		$backend  = $this->connect($input, $output);
+		$listener = $this->buildListenerByVerbosity($output);
 
-		$count         = 0;
-		$debugCallback = function ($file) use (&$count) {
-			$count++;
-		};
-
-		if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-			$debugCallback = function ($file) use ($output, &$count) {
-				$output->writeln('Processing file <comment>' . $file . '</comment>');
-				$count++;
-			};
-		}
-
-		$configurationReader  = new ImportConfigurationReader();
+		$configurationReader  = new ConfigurationReader();
 		$defaultConfiguration =
 			$configurationReader->readConfigurationFromFile(__DIR__ . '/../../../res/DefaultImportConfiguration.json');
 
-		$userConfiguration = new ImportConfiguration(
-			[],
-			$input->getOption('exclude')
-		);
+		$userConfiguration = new Configuration([], $input->getOption('exclude'));
 
 		$importService = new ImportService($backend, $configurationReader);
 		$importService->importSourceFiles(
 			$input->getArgument('dir'),
 			$input->getOption('prune'),
 			$defaultConfiguration->merge($userConfiguration),
-			$debugCallback
+			$listener
 		);
+	}
 
-		$output->writeln('Processed <comment>' . $count . '</comment> files.');
+	/**
+	 * @param OutputInterface $output
+	 * @return NormalFileWriterListener|QuietFileWriterListener|VerboseFileWriterListener
+	 */
+	protected function buildListenerByVerbosity(OutputInterface $output) {
+		switch ($output->getVerbosity()) {
+			case OutputInterface::VERBOSITY_QUIET:
+				$listener = new QuietFileWriterListener($output, $this->getHelper('formatter'));
+				return $listener;
+			case OutputInterface::VERBOSITY_NORMAL:
+				$listener = new NormalFileWriterListener($output, $this->getHelper('formatter'));
+				return $listener;
+			default:
+				$listener = new VerboseFileWriterListener($output, $this->getHelper('formatter'));
+				return $listener;
+		}
 	}
 }

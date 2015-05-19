@@ -2,9 +2,10 @@
 namespace Helmich\Graphizer\Service;
 
 use Helmich\Graphizer\Configuration\ImportConfiguration;
-use Helmich\Graphizer\Configuration\ImportConfigurationReader;
+use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Writer\FileWriterBuilder;
+use Helmich\Graphizer\Writer\FileWriterListener;
 
 class ImportService {
 
@@ -14,18 +15,25 @@ class ImportService {
 	private $backend;
 
 	/**
-	 * @var ImportConfigurationReader
+	 * @var ConfigurationReader
 	 */
 	private $configurationReader;
 
-	public function __construct(Backend $backend, ImportConfigurationReader $configurationReader) {
+	public function __construct(Backend $backend, ConfigurationReader $configurationReader) {
 		$this->backend             = $backend;
 		$this->configurationReader = $configurationReader;
 	}
 
-	public function importSourceFiles(array $sourceFiles, $pruneFirst = FALSE, ImportConfiguration $configuration = NULL, callable $debugCallback = NULL) {
+	public function importSourceFiles(
+		array $sourceFiles,
+		$pruneFirst = FALSE,
+		ImportConfiguration $configuration = NULL,
+		FileWriterListener $listener = NULL
+	) {
 		if ($pruneFirst) {
+			echo "Wiping... ";
 			$this->backend->wipe();
+			echo "Done\n";
 		}
 
 		if (NULL === $configuration) {
@@ -37,8 +45,8 @@ class ImportService {
 			->setConfigurationReader($this->configurationReader)
 			->build();
 
-		if (NULL !== $debugCallback) {
-			$fileWriter->addFileReadListener($debugCallback);
+		if (NULL !== $listener) {
+			$fileWriter->addListener($listener);
 		}
 
 		foreach ($sourceFiles as $path) {

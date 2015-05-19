@@ -2,7 +2,7 @@
 namespace Helmich\Graphizer\Writer;
 
 use Helmich\Graphizer\Configuration\ImportConfiguration;
-use Helmich\Graphizer\Configuration\ImportConfigurationReader;
+use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Persistence\Backend;
 use PhpParser\Lexer;
 use PhpParser\Parser;
@@ -19,7 +19,7 @@ class FileWriterBuilder {
 	 */
 	private $configuration;
 
-	/** @var ImportConfigurationReader */
+	/** @var ConfigurationReader */
 	private $configurationReader;
 
 	public function __construct(Backend $backend) {
@@ -36,10 +36,10 @@ class FileWriterBuilder {
 	}
 
 	/**
-	 * @param ImportConfigurationReader $configurationReader
+	 * @param ConfigurationReader $configurationReader
 	 * @return $this
 	 */
-	public function setConfigurationReader(ImportConfigurationReader $configurationReader) {
+	public function setConfigurationReader(ConfigurationReader $configurationReader) {
 		$this->configurationReader = $configurationReader;
 		return $this;
 	}
@@ -50,7 +50,7 @@ class FileWriterBuilder {
 		}
 
 		if (NULL == $this->configurationReader) {
-			$this->configurationReader = new ImportConfigurationReader();
+			$this->configurationReader = new ConfigurationReader();
 		}
 
 		return new FileWriter(
