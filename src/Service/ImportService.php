@@ -1,16 +1,17 @@
 <?php
 namespace Helmich\Graphizer\Service;
 
-use Helmich\Graphizer\Configuration\ImportConfiguration;
+use Helmich\Graphizer\Configuration\Configuration;
 use Helmich\Graphizer\Configuration\ConfigurationReader;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Configuration\ImportConfiguration;
+use Helmich\Graphizer\Persistence\BackendInterface;
 use Helmich\Graphizer\Writer\FileWriterBuilder;
 use Helmich\Graphizer\Writer\FileWriterListener;
 
 class ImportService {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\BackendInterface
 	 */
 	private $backend;
 
@@ -19,7 +20,7 @@ class ImportService {
 	 */
 	private $configurationReader;
 
-	public function __construct(Backend $backend, ConfigurationReader $configurationReader) {
+	public function __construct(BackendInterface $backend, ConfigurationReader $configurationReader) {
 		$this->backend             = $backend;
 		$this->configurationReader = $configurationReader;
 	}
@@ -37,7 +38,7 @@ class ImportService {
 		}
 
 		if (NULL === $configuration) {
-			$configuration = new ImportConfiguration();
+			$configuration = new Configuration();
 		}
 
 		$fileWriter = (new FileWriterBuilder($this->backend))

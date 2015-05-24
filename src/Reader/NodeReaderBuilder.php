@@ -1,12 +1,12 @@
 <?php
 namespace Helmich\Graphizer\Reader;
 
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 class NodeReaderBuilder {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	private $backend;
 

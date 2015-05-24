@@ -5,7 +5,7 @@ use Everyman\Neo4j\Label;
 use Everyman\Neo4j\Node as NeoNode;
 use Everyman\Neo4j\Relationship;
 use Helmich\Graphizer\Data\NodeCollection;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use PhpParser\Node as PhpNode;
 
 class NodeReader implements NodeReaderInterface {

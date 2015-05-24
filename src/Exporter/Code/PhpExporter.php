@@ -20,7 +20,7 @@
 
 namespace Helmich\Graphizer\Exporter\Code;
 
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Reader\NodeReaderInterface;
 use Helmich\Graphizer\Utility\ObservableTrait;
 use PhpParser\PrettyPrinterAbstract;

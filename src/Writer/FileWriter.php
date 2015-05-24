@@ -4,41 +4,34 @@ namespace Helmich\Graphizer\Writer;
 use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Configuration\PackageConfiguration;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\BackendInterface;
+use Helmich\Graphizer\Persistence\Engine\JsonBulkOperation;
+use Helmich\Graphizer\Persistence\Op\MergeNode;
 use PhpParser\Error;
 use PhpParser\Parser;
 
 class FileWriter {
 
-	/**
-	 * @var NodeWriterInterface
-	 */
+	/** @var NodeWriterInterface */
 	private $nodeWriter;
 
-	/**
-	 * @var Parser
-	 */
+	/** @var Parser */
 	private $parser;
 
-	/**
-	 * @var Backend
-	 */
+	/** @var BackendInterface */
 	private $backend;
 
-	/**
-	 * @var ImportConfiguration
-	 */
+	/** @var ImportConfiguration */
 	private $configuration;
 
-	/**
-	 * @var ConfigurationReader
-	 */
+	/** @var ConfigurationReader */
 	private $configurationReader;
 
 	/** @var FileWriterDispatchingListener */
 	private $listener;
 
-	public function __construct(Backend $backend,
+	public function __construct(
+		BackendInterface $backend,
 		NodeWriterInterface $nodeWriter,
 		Parser $parser,
 		ImportConfiguration $configuration,
@@ -137,18 +130,30 @@ class FileWriter {
 		$relativeFilename =
 			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
 
-		$collectionNode = $this->nodeWriter->writeNodeCollection($ast);
-		$collectionNode->setProperty('filename', $relativeFilename);
-		$collectionNode->save();
+		$bulk = $this->backend->createBulkOperation();
+
+		$collectionNode = $this->nodeWriter->writeNodeCollection($ast, $bulk);
+		$collectionNode->filename($relativeFilename);
+//		$collectionNode->save();
 
 		if ($package) {
-			$cypher = 'MATCH (c:Collection) WHERE id(c)={root}
-			           MERGE (p:Package {name: {pkg}.name, description: {pkg}.description})
-			           MERGE (p)-[:CONTAINS]->(c)';
-			$this->backend->createQuery($cypher)->execute(['root' => $collectionNode, 'pkg' => ['name' => $package->getName(), 'description' => $package->getDescription()]]);
+			/** @var MergeNode $mergePackage */
+			$mergePackage = (new MergeNode('Package'))
+				->name($package->getName())
+				->description($package->getDescription());
+
+			$bulk->push($mergePackage);
+			$bulk->push($mergePackage->relate('CONTAINS_FILE', $collectionNode));
+//			$cypher = 'MATCH (c:Collection) WHERE id(c)={root}
+//			           MERGE (p:Package {name: {pkg}.name, description: {pkg}.description})
+//			           MERGE (p)-[:CONTAINS]->(c)';
+//			$this->backend->createQuery($cypher)->execute(['root' => $collectionNode, 'pkg' => ['name' => $package->getName(), 'description' => $package->getDescription()]]);
 		}
 
-		$this->backend->labelNode($collectionNode, 'File');
+//		$this->backend->labelNode($collectionNode, 'File');
+		$collectionNode->addLabel('File');
+		$bulk->evaluate();
+
 		$this->listener->onFileRead($filename, (microtime(TRUE) - $time) * 1000);
 
 		return $collectionNode;

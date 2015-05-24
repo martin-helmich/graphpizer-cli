@@ -1,7 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
-use Helmich\Graphizer\Persistence\BackendBuilder;
+use Helmich\Graphizer\Persistence\Engine\BackendBuilder;
 use Symfony\Component\Console\Command\Command;
 
 class CommandBuilder {

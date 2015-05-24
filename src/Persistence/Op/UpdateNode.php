@@ -56,6 +56,13 @@ class UpdateNode implements Operation {
 	}
 
 	/**
+	 * @return array
+	 */
+	public function toJson() {
+		throw new \BadMethodCallException('Not supported!');
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getArguments() {

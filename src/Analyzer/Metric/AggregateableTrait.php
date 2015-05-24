@@ -20,7 +20,7 @@
 
 namespace Helmich\Graphizer\Analyzer\Metric;
 
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 trait AggregateableTrait {
 

@@ -9,10 +9,8 @@ class Application extends BaseApplication {
 	public function getDefinition() {
 		$parent = parent::getDefinition();
 
-		$parent->addOption(new InputOption('neo-host', 'H', InputOption::VALUE_REQUIRED, 'Hostname of Neo4j server', 'localhost'));
-		$parent->addOption(new InputOption('neo-port', 'P', InputOption::VALUE_REQUIRED, 'Port of Neo4j server', 7474));
-		$parent->addOption(new InputOption('neo-user', 'u', InputOption::VALUE_REQUIRED, 'Username for Neo4j server', 'neo4j'));
-		$parent->addOption(new InputOption('neo-password', 'p', InputOption::VALUE_REQUIRED, 'Password for Neo4j server', 'martin123'));
+		$parent->addOption(new InputOption('graph-host', 'H', InputOption::VALUE_REQUIRED, 'Hostname of GraPHPizer server', 'localhost'));
+		$parent->addOption(new InputOption('graph-port', 'P', InputOption::VALUE_REQUIRED, 'Port of GraPHPizer server', 9000));
 
 		return $parent;
 	}

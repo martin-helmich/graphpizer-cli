@@ -1,19 +1,19 @@
 <?php
 namespace Helmich\Graphizer\Tests\Functional\Writer;
 
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
+use Helmich\Graphizer\Tests\Functional\AbstractFunctionalTestCase;
 use Helmich\Graphizer\Writer\NodeWriter;
 use Helmich\Graphizer\Writer\NodeWriterBuilder;
-use Helmich\Graphizer\Persistence\Backend;
-use Helmich\Graphizer\Tests\Functional\AbstractFunctionalTestCase;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\Function_;
 use function assertThat;
 use function Helmich\Graphizer\Tests\Functional\cypherQuery;
 use function Helmich\Graphizer\Tests\Functional\hasResultCount;
-use PhpParser\Node\Stmt\Function_;
 
 class NodeWriterTest extends AbstractFunctionalTestCase {
 

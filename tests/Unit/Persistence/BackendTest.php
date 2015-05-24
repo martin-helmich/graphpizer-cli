@@ -25,8 +25,8 @@ use Everyman\Neo4j\Cypher\Query;
 use Everyman\Neo4j\Label;
 use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Query\ResultSet;
-use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Persistence\DebuggerInterface;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Tests\Unit\AbstractUnitTestCase;
 
 class BackendTest extends AbstractUnitTestCase {

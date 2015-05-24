@@ -2,12 +2,12 @@
 namespace Helmich\Graphizer\Exporter\Graph;
 
 use Everyman\Neo4j\Label;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 class JsonExporter implements ExporterInterface {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	private $backend;
 

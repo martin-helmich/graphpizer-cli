@@ -23,7 +23,6 @@ namespace Helmich\Graphizer\Tests\Unit\Persistence;
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Transport;
 use Faker\Factory;
-use Helmich\Graphizer\Persistence\BackendBuilder;
 use Helmich\Graphizer\Persistence\DebuggerInterface;
 use Helmich\Graphizer\Tests\Unit\AbstractUnitTestCase;
 
@@ -45,7 +44,7 @@ class BackendBuilderTest extends AbstractUnitTestCase {
 			$transport->expects(never())->method('setAuth');
 		}
 
-		$builder = new BackendBuilder();
+		$builder = new \Helmich\Graphizer\Persistence\Neo4j\BackendBuilder();
 		$builder
 			->setHost($hostname)
 			->setPassword($password)

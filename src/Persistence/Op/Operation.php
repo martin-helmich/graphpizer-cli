@@ -34,6 +34,11 @@ interface Operation {
 	public function toCypher();
 
 	/**
+	 * @return array
+	 */
+	public function toJson();
+
+	/**
 	 * @return string
 	 */
 	public function getArguments();

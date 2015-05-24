@@ -21,7 +21,7 @@
 namespace Helmich\Graphizer\Exporter\Graph;
 
 use Helmich\Graphizer\Exporter\Graph\Dot\RenderingStrategy;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 /**
  * Exports a model into a DOT format file.
@@ -32,7 +32,7 @@ use Helmich\Graphizer\Persistence\Backend;
 class DotExporter implements ExporterInterface {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	private $backend;
 

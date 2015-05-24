@@ -1,15 +1,14 @@
 <?php
 namespace Helmich\Graphizer\Modeler;
 
-use Helmich\Graphizer\Persistence\Backend;
 use Helmich\Graphizer\Persistence\BulkOperation;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Persistence\Op\MatchNodeByNode;
-use Helmich\Graphizer\Persistence\Op\UpdateNode;
 
 class NamespaceResolver {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	private $backend;
 
@@ -46,7 +45,7 @@ class NamespaceResolver {
 			'MATCH (ns)-[:SUB {type: "stmts"}]->()-[:SUB|HAS*]->(name:Name) WHERE id(ns)={node} AND name.fullName IS NULL RETURN name';
 		$nameQuery  = $this->backend->createQuery($nameCypher, 'name');
 
-		$bulk = new BulkOperation($this->backend);
+		$bulk = $this->backend->createBulkOperation();
 
 		foreach ($namespaces as $row) {
 			$namespace    = $row->node('ns');

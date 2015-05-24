@@ -18,9 +18,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Persistence;
+namespace Helmich\Graphizer\Persistence\Neo4j;
 
 use Everyman\Neo4j\Client;
+use Helmich\Graphizer\Persistence\DebuggerInterface;
 
 /**
  * Helper class for easily building new Neo4j backends.

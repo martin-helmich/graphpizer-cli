@@ -23,7 +23,7 @@ namespace Helmich\Graphizer\Exporter\Graph;
 use Everyman\Neo4j\Label;
 use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Relationship;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 /**
  * Exports a model into a DOT format file.

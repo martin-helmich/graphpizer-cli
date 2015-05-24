@@ -70,11 +70,11 @@ END;
 					} elseif ($captures[2] != "") {
 						// Invalid byte of the form 10xxxxxx.
 						// Encode as 11000010 10xxxxxx.
-						return "\xC2" . $captures[2];
+						return chr(0xC2) . $captures[2];
 					} else {
 						// Invalid byte of the form 11xxxxxx.
 						// Encode as 11000011 10xxxxxx.
-						return "\xC3" . chr(ord($captures[3]) - 64);
+						return chr(0xC3) . chr(ord($captures[3]) - 64);
 					}
 				}, $argument);
 			}

@@ -1,11 +1,17 @@
 <?php
-namespace Helmich\Graphizer\Persistence;
+namespace Helmich\Graphizer\Persistence\Neo4j;
 
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Cypher\Query;
 use Everyman\Neo4j\Node;
+use Helmich\Graphizer\Persistence\BackendInterface;
+use Helmich\Graphizer\Persistence\BulkOperation;
+use Helmich\Graphizer\Persistence\DebuggerInterface;
+use Helmich\Graphizer\Persistence\NullDebugger;
+use Helmich\Graphizer\Persistence\PreparedStatement;
+use Persistence\Neo4j\CypherBulkOperation;
 
-class Backend {
+class Backend implements BackendInterface {
 
 	/**
 	 * @var Client
@@ -62,4 +68,13 @@ class Backend {
 	public function wipe() {
 		$this->execute('MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE n,r');
 	}
+
+	/**
+	 * @return BulkOperation
+	 */
+	public function createBulkOperation() {
+		return new CypherBulkOperation($this);
+	}
+
+
 }

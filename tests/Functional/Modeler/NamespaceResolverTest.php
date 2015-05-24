@@ -4,7 +4,7 @@ namespace Helmich\Graphizer\Tests\Functional\Modeler;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Modeler\ClassModelGenerator;
 use Helmich\Graphizer\Modeler\NamespaceResolver;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Tests\Functional\AbstractFunctionalTestCase;
 use Helmich\Graphizer\Writer\FileWriter;
 use Helmich\Graphizer\Writer\FileWriterBuilder;

@@ -1,17 +1,16 @@
 <?php
 namespace Helmich\Graphizer\Writer;
 
-use Helmich\Graphizer\Configuration\ImportConfiguration;
+use Helmich\Graphizer\Configuration\Configuration;
 use Helmich\Graphizer\Configuration\ConfigurationReader;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Configuration\ImportConfiguration;
+use Helmich\Graphizer\Persistence\BackendInterface;
 use PhpParser\Lexer;
 use PhpParser\Parser;
 
 class FileWriterBuilder {
 
-	/**
-	 * @var Backend
-	 */
+	/** @var BackendInterface */
 	private $backend;
 
 	/**
@@ -22,7 +21,7 @@ class FileWriterBuilder {
 	/** @var ConfigurationReader */
 	private $configurationReader;
 
-	public function __construct(Backend $backend) {
+	public function __construct(BackendInterface $backend) {
 		$this->backend = $backend;
 	}
 
@@ -46,7 +45,7 @@ class FileWriterBuilder {
 
 	public function build() {
 		if (NULL === $this->configuration) {
-			$this->configuration = new ImportConfiguration();
+			$this->configuration = new Configuration();
 		}
 
 		if (NULL == $this->configurationReader) {
@@ -55,7 +54,7 @@ class FileWriterBuilder {
 
 		return new FileWriter(
 			$this->backend,
-			(new NodeWriterBuilder($this->backend))->build(),
+			(new NodeWriterBuilder())->build(),
 			new Parser(new Lexer()),
 			$this->configuration,
 			$this->configurationReader

@@ -1,12 +1,12 @@
 <?php
 namespace Helmich\Graphizer\Modeler;
 
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 class UsageAnalyzer {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	private $backend;
 

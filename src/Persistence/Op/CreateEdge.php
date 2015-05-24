@@ -23,7 +23,7 @@ namespace Helmich\Graphizer\Persistence\Op;
 /**
  * Creates a new edge between two nodes.
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 class CreateEdge implements Operation {
@@ -100,6 +100,19 @@ class CreateEdge implements Operation {
 				$this->end->getId()
 			);
 		}
+	}
+
+	public function toJson() {
+		return [
+			'relationships' => [
+				[
+					'from'       => $this->start->getId(),
+					'to'         => $this->end->getId(),
+					'label'      => $this->type,
+					'properties' => (object) $this->properties
+				]
+			]
+		];
 	}
 
 	/**

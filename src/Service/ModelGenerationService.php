@@ -4,7 +4,7 @@ namespace Helmich\Graphizer\Service;
 use Helmich\Graphizer\Modeler\ClassModelGenerator;
 use Helmich\Graphizer\Modeler\NamespaceResolver;
 use Helmich\Graphizer\Modeler\UsageAnalyzer;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 class ModelGenerationService {
 

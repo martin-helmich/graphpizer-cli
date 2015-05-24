@@ -1,12 +1,12 @@
 <?php
 namespace Helmich\Graphizer\Exporter\Graph;
 
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 class GexfExporter implements ExporterInterface {
 
 	/**
-	 * @var Backend
+	 * @var \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	private $backend;
 

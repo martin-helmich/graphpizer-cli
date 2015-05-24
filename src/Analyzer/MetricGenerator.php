@@ -23,7 +23,7 @@ namespace Helmich\Graphizer\Analyzer;
 use Helmich\Graphizer\Analyzer\Metric\CyclomaticComplexity;
 use Helmich\Graphizer\Analyzer\Metric\Metric;
 use Helmich\Graphizer\Analyzer\Metric\NodeCount;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Utility\ObservableTrait;
 
 class MetricGenerator {

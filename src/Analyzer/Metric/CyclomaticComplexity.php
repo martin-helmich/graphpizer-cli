@@ -20,13 +20,13 @@
 
 namespace Helmich\Graphizer\Analyzer\Metric;
 
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 
 class CyclomaticComplexity implements Metric {
 
 	use AggregateableTrait;
 
-	/** @var Backend */
+	/** @var \Helmich\Graphizer\Persistence\Neo4j\Backend */
 	protected $backend;
 
 	public function __construct(Backend $backend) {
@@ -57,7 +57,7 @@ class CyclomaticComplexity implements Metric {
 	}
 
 	/**
-	 * @return Backend
+	 * @return \Helmich\Graphizer\Persistence\Neo4j\Backend
 	 */
 	protected function getBackend() {
 		return $this->backend;

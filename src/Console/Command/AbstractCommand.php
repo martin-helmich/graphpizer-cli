@@ -2,7 +2,8 @@
 namespace Helmich\Graphizer\Console\Command;
 
 use Helmich\Graphizer\Console\ConsoleBackendDebugger;
-use Helmich\Graphizer\Persistence\BackendBuilder;
+use Helmich\Graphizer\Persistence\Engine\BackendBuilder as EngineBackendBuilder;
+use Helmich\Graphizer\Persistence\Neo4j\BackendBuilder as Neo4jBackendBuilder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -10,21 +11,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractCommand extends Command {
 
 	/**
-	 * @var BackendBuilder
+	 * @var EngineBackendBuilder
 	 */
 	private $backendBuilder;
 
-	public function __construct($name = NULL, BackendBuilder $backendBuilder) {
+	public function __construct($name = NULL, EngineBackendBuilder $backendBuilder) {
 		parent::__construct($name);
 		$this->backendBuilder = $backendBuilder;
 	}
 
 	protected function connect(InputInterface $input, OutputInterface $output) {
 		$this->backendBuilder
-			->setHost($input->getOption('neo-host'))
-			->setPort($input->getOption('neo-port'))
-			->setUser($input->getOption('neo-user'))
-			->setPassword($input->getOption('neo-password'));
+			->setHost($input->getOption('graph-host'))
+			->setPort($input->getOption('graph-port'));
 
 		if ($output->getVerbosity() === OutputInterface::VERBOSITY_DEBUG) {
 			$this->backendBuilder->setDebugger(new ConsoleBackendDebugger($output));

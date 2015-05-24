@@ -2,16 +2,16 @@
 namespace Helmich\Graphizer\Tests\Functional\Writer;
 
 use Everyman\Neo4j\Cypher\Query;
-use Helmich\Graphizer\Reader\NodeReaderBuilder;
-use Helmich\Graphizer\Writer\NodeWriter;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Reader\NodeReader;
-use Helmich\Graphizer\Writer\NodeWriterBuilder;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Reader\NodeReaderBuilder;
 use Helmich\Graphizer\Tests\Functional\AbstractFunctionalTestCase;
+use Helmich\Graphizer\Writer\NodeWriter;
+use Helmich\Graphizer\Writer\NodeWriterBuilder;
 use PhpParser\Lexer;
 use PhpParser\Parser;
-use function \assertThat;
-use function \Helmich\Graphizer\Tests\Functional\matchesSyntaxTree;
+use function assertThat;
+use function Helmich\Graphizer\Tests\Functional\matchesSyntaxTree;
 
 class FullCycleTest extends AbstractFunctionalTestCase {
 

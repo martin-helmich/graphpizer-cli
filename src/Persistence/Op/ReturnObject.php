@@ -48,6 +48,16 @@ class ReturnObject implements Operation {
 	}
 
 	/**
+	 * @return array
+	 */
+	public function toJson() {
+		return [
+			'return' => $this->node->getId()
+		];
+	}
+
+
+	/**
 	 * @return string
 	 */
 	public function getArguments() {

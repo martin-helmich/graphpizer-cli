@@ -3,7 +3,7 @@ namespace Helmich\Graphizer\Data;
 
 use Everyman\Neo4j\Label;
 use Everyman\Neo4j\Node;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Persistence\PreparedStatement;
 
 class NodeCollection {
