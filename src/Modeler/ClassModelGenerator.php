@@ -193,7 +193,7 @@ class ClassModelGenerator {
 			$result = $create->execute(['method' => $properties, 'definition' => $methodStmt, 'class' => $classNode]);
 			$method = $result[0]->node('m');
 
-			$this->enrichNodeFromDocBlock($method, $methodStmt->getProperty('docComment'));
+			$this->enrichNodeFromDocBlock($method, $methodStmt->getProperty('docComment'), $classNode);
 
 			$paramsQuery = $this->backend->createQuery(
 				'MATCH (m)-[:SUB {type: "params"}]->()-[:HAS]->(paramDefinition) WHERE id(m)={node}
@@ -202,7 +202,7 @@ class ClassModelGenerator {
 				 RETURN paramDefinition, default, param'
 			);
 
-			foreach ($paramsQuery->execute(['node' => $methodStmt]) as $row) {
+			foreach ($paramsQuery->execute(['node' => $methodStmt]) as $order => $row) {
 				$parameter     = $row->node('paramDefinition');
 				$default       = $row->node('default');
 				$parameterNode = $row->node('param');
@@ -224,6 +224,7 @@ class ClassModelGenerator {
 						->save();
 					$method
 						->relateTo($parameterNode, 'HAS_PARAMETER')
+						->setProperty('ordering', $order)
 						->save();
 				} else {
 					$parameterNode->setProperties($properties);
@@ -235,11 +236,15 @@ class ClassModelGenerator {
 					  MERGE (t:Type {name: tname.fullName, primitive: false})
 					  MERGE (p)-[:POSSIBLE_TYPE]->(t)';
 				$this->backend->createQuery($c)->execute(['parameter' => $parameterNode]);
+				$c = 'MATCH (p)-[:DEFINED_IN]->(pd) WHERE id(p)={parameter} AND pd.type IS NOT NULL AND NOT (pd)-[:SUB {type: "type"}]->()
+					  MERGE (t:Type {name: pd.type, primitive: true})
+					  MERGE (p)-[:POSSIBLE_TYPE]->(t)';
+				$this->backend->createQuery($c)->execute(['parameter' => $parameterNode]);
 			}
 		}
 	}
 
-	private function enrichNodeFromDocBlock(Node $node, $docblock) {
+	private function enrichNodeFromDocBlock(Node $node, $docblock, Node $context = NULL) {
 		$phpdoc = new DocBlock($docblock);
 		$dirty  = FALSE;
 
@@ -267,6 +272,9 @@ class ClassModelGenerator {
 		if ($phpdoc->hasTag('return')) {
 			foreach ($phpdoc->getTagsByName('return') as $tag) {
 				$dt = explode(' ', $tag->getContent())[0];
+				if ($dt === 'self') {
+					$dt = $context->getProperty('fqcn');
+				}
 				$this->setNodeDataType($node, $dt);
 			}
 		}
