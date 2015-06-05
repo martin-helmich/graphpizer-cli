@@ -70,4 +70,18 @@ class Backend implements BackendInterface {
 	public function createBulkOperation() {
 		return new JsonBulkOperation($this);
 	}
+
+	/**
+	 * @param string $filename
+	 * @param string $checksum
+	 * @return bool
+	 */
+	public function isFileUnchanged($filename, $checksum) {
+		$uri = $this->baseUrl . '/projects/' . $this->project . '/files/' . ltrim($filename, '/');
+
+		$response = $this->client->head($uri, ['headers' => ['ETag' => $checksum]]);
+		return $response->getStatusCode() == 304;
+	}
+
+
 }

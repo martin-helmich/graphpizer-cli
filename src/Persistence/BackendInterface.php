@@ -11,4 +11,11 @@ interface BackendInterface {
 	 */
 	public function createBulkOperation();
 
+	/**
+	 * @param string $filename
+	 * @param string $checksum
+	 * @return bool
+	 */
+	public function isFileUnchanged($filename, $checksum);
+
 }

@@ -45,4 +45,8 @@ class VerboseFileWriterListener extends NormalFileWriterListener {
 		$this->output->writeln('Applying configuration from <comment>' . $configFilename . '</comment>');
 	}
 
+	public function onFileUnchanged($filename) {
+		$this->output->writeln("<info>Unchanged</info>");
+	}
+
 }

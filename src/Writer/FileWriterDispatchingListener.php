@@ -53,6 +53,12 @@ class FileWriterDispatchingListener implements FileWriterListener {
 		}
 	}
 
+	public function onFileUnchanged($filename) {
+		foreach ($this->listeners as $listener) {
+			$listener->onFileUnchanged($filename);
+		}
+	}
+
 	public function onConfigApplied($configFilename) {
 		foreach ($this->listeners as $listener) {
 			$listener->onConfigApplied($configFilename);

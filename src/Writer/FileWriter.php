@@ -90,7 +90,7 @@ class FileWriter {
 
 			$entryPath = $directory . '/' . $entry;
 			if (is_dir($entryPath)) {
-				if ($configuration->getInterpreter()->isDirectoryEntryMatching($entry)) {
+				if ($configuration->getInterpreter()->isDirectoryEntryMatching($entryPath)) {
 					$this->readDirectoryRecursive($entryPath, $configuration, $baseDirectory, $package);
 				}
 			} else {
@@ -119,6 +119,15 @@ class FileWriter {
 		$time = microtime(TRUE);
 		$this->listener->onFileReading($filename);
 
+		$relativeFilename =
+			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
+		$sha1 = sha1_file($filename);
+
+		if ($this->backend->isFileUnchanged($relativeFilename, $sha1)) {
+			$this->listener->onFileUnchanged($filename);
+			return NULL;
+		}
+
 		$code = file_get_contents($filename);
 		try {
 			$ast = $this->parser->parse($code);
@@ -127,14 +136,11 @@ class FileWriter {
 			return NULL;
 		}
 
-		$relativeFilename =
-			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
-
 		$bulk = $this->backend->createBulkOperation();
 
 		$collectionNode = $this->nodeWriter->writeNodeCollection($ast, $bulk);
 		$collectionNode->filename($relativeFilename);
-//		$collectionNode->save();
+		$collectionNode->checksum($sha1);
 
 		if ($package) {
 			/** @var MergeNode $mergePackage */
@@ -144,13 +150,8 @@ class FileWriter {
 
 			$bulk->push($mergePackage);
 			$bulk->push($mergePackage->relate('CONTAINS_FILE', $collectionNode));
-//			$cypher = 'MATCH (c:Collection) WHERE id(c)={root}
-//			           MERGE (p:Package {name: {pkg}.name, description: {pkg}.description})
-//			           MERGE (p)-[:CONTAINS]->(c)';
-//			$this->backend->createQuery($cypher)->execute(['root' => $collectionNode, 'pkg' => ['name' => $package->getName(), 'description' => $package->getDescription()]]);
 		}
 
-//		$this->backend->labelNode($collectionNode, 'File');
 		$collectionNode->addLabel('File');
 		$bulk->evaluate();
 

@@ -61,5 +61,8 @@ class QuietFileWriterListener implements FileWriterListener {
 	public function onFinish($target) {
 	}
 
+	public function onFileUnchanged($filename) {
+	}
+
 
 }

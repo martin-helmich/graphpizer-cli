@@ -30,6 +30,8 @@ interface FileWriterListener {
 
 	public function onFileSkipped($filename);
 
+	public function onFileUnchanged($filename);
+
 	public function onConfigApplied($configFilename);
 
 	public function onFinish($target);
