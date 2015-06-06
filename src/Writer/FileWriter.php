@@ -163,12 +163,16 @@ class FileWriter {
 	private function autoDiscoverPackage($directory) {
 		if (file_exists($directory . '/composer.json')) {
 			$data = json_decode($directory . '/composer.json');
-			return new PackageConfiguration(
-				$data->name,
-				isset($data->description) ? $data->description : ''
-			);
-		} else if (file_exists($directory . '/ext_emconf.php')) {
-			$_EXTKEY = dirname($directory);
+			if (isset($data->name)) {
+				return new PackageConfiguration(
+					$data->name,
+					isset($data->description) ? $data->description : ''
+				);
+			}
+		}
+
+		if (file_exists($directory . '/ext_emconf.php')) {
+			$_EXTKEY = basename($directory);
 			$EM_CONF = [];
 
 			require($directory . '/ext_emconf.php');
@@ -178,6 +182,7 @@ class FileWriter {
 				$EM_CONF[$_EXTKEY]['title']
 			);
 		}
+
 		return NULL;
 	}
 }
