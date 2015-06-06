@@ -2,6 +2,7 @@
 namespace Helmich\Graphizer\Persistence\Engine;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Message\Request;
 use Helmich\Graphizer\Persistence\BackendInterface;
 use Helmich\Graphizer\Persistence\BulkOperation;
 use Helmich\Graphizer\Persistence\DebuggerInterface;
@@ -77,9 +78,10 @@ class Backend implements BackendInterface {
 	 * @return bool
 	 */
 	public function isFileUnchanged($filename, $checksum) {
-		$uri = $this->baseUrl . '/projects/' . $this->project . '/files/' . ltrim($filename, '/');
+		$uri      = $this->baseUrl . '/projects/' . $this->project . '/files/' . ltrim($filename, '/');
+		$request  = new Request('HEAD', $uri, ['ETag' => $checksum], NULL, ['exceptions' => FALSE]);
+		$response = $this->client->send($request);
 
-		$response = $this->client->head($uri, ['headers' => ['ETag' => $checksum]]);
 		return $response->getStatusCode() == 304;
 	}
 
