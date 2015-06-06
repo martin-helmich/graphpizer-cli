@@ -4,6 +4,7 @@ namespace Helmich\Graphizer\Writer;
 use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Configuration\PackageConfiguration;
+use Helmich\Graphizer\Parser\FileParser;
 use Helmich\Graphizer\Persistence\BackendInterface;
 use Helmich\Graphizer\Persistence\Engine\JsonBulkOperation;
 use Helmich\Graphizer\Persistence\Op\MergeNode;
@@ -15,7 +16,7 @@ class FileWriter {
 	/** @var NodeWriterInterface */
 	private $nodeWriter;
 
-	/** @var Parser */
+	/** @var FileParser */
 	private $parser;
 
 	/** @var BackendInterface */
@@ -33,7 +34,7 @@ class FileWriter {
 	public function __construct(
 		BackendInterface $backend,
 		NodeWriterInterface $nodeWriter,
-		Parser $parser,
+		FileParser $parser,
 		ImportConfiguration $configuration,
 		ConfigurationReader $configurationReader
 	) {
@@ -56,7 +57,8 @@ class FileWriter {
 		$this->listener->onFinish($directory);
 	}
 
-	private function readDirectoryRecursive($directory,
+	private function readDirectoryRecursive(
+		$directory,
 		ImportConfiguration $configuration,
 		$baseDirectory,
 		PackageConfiguration $package = NULL
@@ -128,9 +130,8 @@ class FileWriter {
 			return NULL;
 		}
 
-		$code = file_get_contents($filename);
 		try {
-			$ast = $this->parser->parse($code);
+			$ast = $this->parser->parseFile($filename);
 		} catch (Error $parseError) {
 			$this->listener->onFileFailed($filename, $parseError);
 			return NULL;

@@ -4,6 +4,8 @@ namespace Helmich\Graphizer\Writer;
 use Helmich\Graphizer\Configuration\Configuration;
 use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
+use Helmich\Graphizer\Parser\CachingDecorator;
+use Helmich\Graphizer\Parser\FileParser;
 use Helmich\Graphizer\Persistence\BackendInterface;
 use PhpParser\Lexer;
 use PhpParser\Parser;
@@ -52,10 +54,13 @@ class FileWriterBuilder {
 			$this->configurationReader = new ConfigurationReader();
 		}
 
+		$parser = new Parser(new Lexer());
+		$fileParser = new CachingDecorator(new FileParser($parser), getcwd() . '/.graphizer-cache');
+
 		return new FileWriter(
 			$this->backend,
 			(new NodeWriterBuilder())->build(),
-			new Parser(new Lexer()),
+			$fileParser,
 			$this->configuration,
 			$this->configurationReader
 		);
