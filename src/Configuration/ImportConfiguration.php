@@ -40,4 +40,9 @@ interface ImportConfiguration {
 	 */
 	public function getPackage();
 
+	/**
+	 * @return ProjectConfiguration
+	 */
+	public function getProject();
+
 }

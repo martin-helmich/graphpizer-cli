@@ -84,6 +84,8 @@ class FileWriter {
 			}
 		}
 
+		$this->backend->upsertProject($configuration->getProject());
+
 		$entries = scandir($directory);
 		foreach ($entries as $entry) {
 			if ($entry[0] == '.') {
@@ -125,7 +127,7 @@ class FileWriter {
 			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
 		$sha1 = sha1_file($filename);
 
-		if ($this->backend->isFileUnchanged($relativeFilename, $sha1)) {
+		if ($this->backend->isFileUnchanged($configuration->getProject(), $relativeFilename, $sha1)) {
 			$this->listener->onFileUnchanged($filename);
 			return NULL;
 		}
@@ -137,7 +139,7 @@ class FileWriter {
 			return NULL;
 		}
 
-		$bulk = $this->backend->createBulkOperation();
+		$bulk = $this->backend->createBulkOperation($configuration->getProject());
 
 		$collectionNode = $this->nodeWriter->writeNodeCollection($ast, $bulk);
 		$collectionNode->filename($relativeFilename);

@@ -7,6 +7,10 @@
         "package": {
             "name": "graphizer",
             "description": "Store PHP syntax trees in a Neoj4 database"
+        },
+        "project": {
+            "slug": "graphpizer",
+            "name": "GraPHPizer"
         }
     },
     "subConfigs": {

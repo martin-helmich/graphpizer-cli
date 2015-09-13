@@ -42,6 +42,41 @@
                     "oneOf": [
                         {"$ref": "#/definitions/packageManual"}
                     ]
+                },
+                "project": {
+                    "$ref": "#/definitions/project"
+                }
+            }
+        },
+        "project": {
+            "type": "object",
+            "required": ["slug", "name"],
+            "properties": {
+                "slug": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "additionalTransformations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformation"
+                    }
+                }
+            }
+        },
+        "transformation": {
+            "type": "object",
+            "required": ["when", "cypher"],
+            "additionalProperties": false,
+            "properties": {
+                "when": {
+                    "type": "string",
+                    "enum": ["preTypeInference"]
+                },
+                "cypher": {
+                    "type": "string"
                 }
             }
         },

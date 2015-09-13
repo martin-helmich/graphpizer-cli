@@ -11,7 +11,7 @@ use Helmich\Graphizer\Writer\FileWriterListener;
 class ImportService {
 
 	/**
-	 * @var \Helmich\Graphizer\Persistence\BackendInterface
+	 * @var BackendInterface
 	 */
 	private $backend;
 
@@ -28,17 +28,21 @@ class ImportService {
 	public function importSourceFiles(
 		array $sourceFiles,
 		$pruneFirst = FALSE,
-		ImportConfiguration $configuration = NULL,
+		Configuration $configuration = NULL,
 		FileWriterListener $listener = NULL
 	) {
-		if ($pruneFirst) {
-			echo "Wiping... ";
-			$this->backend->wipe();
-			echo "Done\n";
-		}
-
 		if (NULL === $configuration) {
 			$configuration = new Configuration();
+		}
+
+		$rootConfigurations = $this->getRootConfigurations($sourceFiles, $configuration);
+
+		if ($pruneFirst) {
+			foreach ($rootConfigurations as $rootConfiguration) {
+				echo "Wiping project {$rootConfiguration->getProject()->getSlug()}...";
+				$this->backend->wipe($rootConfiguration->getProject());
+				echo "Done";
+			}
 		}
 
 		$fileWriter = (new FileWriterBuilder($this->backend))
@@ -57,5 +61,30 @@ class ImportService {
 				$fileWriter->readDirectory($path);
 			}
 		}
+	}
+
+	/**
+	 * Builds a set of configurations for each specified import source
+	 *
+	 * @param array         $sourceFiles       The list of import sources (files and/or directories)
+	 * @param Configuration $baseConfiguration The base configuration. Each new configuration will be merged with this object
+	 * @return ImportConfiguration[]           The created configuration objects
+	 */
+	private function getRootConfigurations(array $sourceFiles, Configuration $baseConfiguration) {
+		$configurations = [];
+
+		foreach ($sourceFiles as $sourceFile) {
+			$configurationFileName = $sourceFile . '/.graphpizer.json';
+			if (!file_exists($configurationFileName)) {
+				continue;
+			}
+
+			$configuration = $this->configurationReader->readConfigurationFromFile($configurationFileName);
+			$configuration = $baseConfiguration->merge($configuration);
+
+			$configurations[] = $configuration;
+		}
+
+		return $configurations;
 	}
 }

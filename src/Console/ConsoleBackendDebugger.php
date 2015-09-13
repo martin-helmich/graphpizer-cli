@@ -1,6 +1,7 @@
 <?php
 namespace Helmich\Graphizer\Console;
 
+use Helmich\Graphizer\Configuration\ProjectConfiguration;
 use Helmich\Graphizer\Persistence\DebuggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -17,6 +18,12 @@ class ConsoleBackendDebugger implements DebuggerInterface {
 		$this->output = $output;
 	}
 
+	public function projectUpserted(ProjectConfiguration $project) {
+		$this->output->writeln(
+			sprintf('Creating/updating project <comment>%s</comment>', $project->getSlug())
+		);
+	}
+
 	public function nodeCreated($id, array $labels) {
 		$this->output->writeln(
 			sprintf('Created node <comment>#%s</comment> with labels <comment>%s</comment>', $id, json_encode($labels))
@@ -26,13 +33,6 @@ class ConsoleBackendDebugger implements DebuggerInterface {
 	public function queryExecuted($cypher, array $args) {
 		$time = microtime(TRUE) - $this->timer;
 		$this->output->writeln(sprintf("Took <info>%fms</info>", $time * 1000));
-//		$this->output->writeln(
-//			sprintf(
-//				'Executed Cypher query <comment>%s</comment> with args: <comment>%s</comment>',
-//				$cypher,
-//				json_encode($args)
-//			)
-//		);
 	}
 
 	public function queryExecuting($cypher, array $args) {

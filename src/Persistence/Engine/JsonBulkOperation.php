@@ -2,17 +2,20 @@
 namespace Helmich\Graphizer\Persistence\Engine;
 
 
+use Helmich\Graphizer\Configuration\ProjectConfiguration;
 use Helmich\Graphizer\Persistence\BulkOperation;
 
 class JsonBulkOperation extends BulkOperation {
 
-	/**
-	 * @var Backend
-	 */
+	/** @var Backend */
 	private $backend;
 
-	public function __construct(Backend $backend) {
+	/** @var ProjectConfiguration */
+	private $project;
+
+	public function __construct(ProjectConfiguration $project, Backend $backend) {
 		$this->backend = $backend;
+		$this->project = $project;
 	}
 
 	/**
@@ -36,8 +39,7 @@ class JsonBulkOperation extends BulkOperation {
 			}
 		}
 
-		$this->backend->import($result);
-//		echo json_encode($result);
+		$this->backend->import($this->project, $result);
 	}
 
 }

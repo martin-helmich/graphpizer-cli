@@ -6,6 +6,12 @@ completely undocumented. I refuse to take any responsibility for any kind of
 havoc this program might wreak on your computer and to provide any kind of
 support.
 
+## Author and License
+
+Martin Helmich
+
+This project is [LGPL-licensed](LICENSE.txt).
+
 ## What is GraPHPizer?
 
 This is a command-line tool that's designed for usage with the [GraPHPizer

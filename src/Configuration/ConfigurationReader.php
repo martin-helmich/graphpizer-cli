@@ -63,15 +63,38 @@ class ConfigurationReader {
 	 */
 	protected function buildConfigurationFromData($config) {
 		$package = NULL;
+		$project = NULL;
+
 		if (isset($config->package)) {
 			$packageData = $config->package;
 			$package     = new PackageConfiguration($packageData->name, $packageData->description);
 		}
 
+		if (isset($config->project)) {
+			$projectData = $config->project;
+
+			$transformations = [];
+			if (isset($projectData->additionalTransformations)) {
+				foreach($projectData->additionalTransformations as $transformation) {
+					$transformations[] = new ProjectTransformationConfiguration(
+						$transformation->when,
+						$transformation->cypher
+					);
+				}
+			}
+
+			$project = new ProjectConfiguration(
+				$projectData->slug,
+				$projectData->name,
+				$transformations
+			);
+		}
+
 		return new Configuration(
 			isset($config->matchPatterns) ? $config->matchPatterns : [],
 			isset($config->excludePatterns) ? $config->excludePatterns : [],
-			$package
+			$package,
+			$project
 		);
 	}
 }

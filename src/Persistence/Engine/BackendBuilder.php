@@ -22,9 +22,6 @@ class BackendBuilder {
 
 	protected $debugger = NULL;
 
-	/** @var string */
-	private $project = 'default';
-
 	protected $clientFactory = NULL;
 
 	/**
@@ -42,11 +39,6 @@ class BackendBuilder {
 	 */
 	public function setPort($port) {
 		$this->port = $port;
-		return $this;
-	}
-
-	public function setProject($project) {
-		$this->project = $project;
 		return $this;
 	}
 
@@ -92,7 +84,7 @@ class BackendBuilder {
 	public function build() {
 		$client = $this->createClient();
 
-		return new Backend($client, $this->host, $this->port, $this->project, $this->debugger);
+		return new Backend($client, $this->host, $this->port, $this->debugger);
 	}
 
 	/**

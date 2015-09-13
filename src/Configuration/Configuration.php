@@ -18,15 +18,20 @@ class Configuration implements ImportConfiguration {
 	/** @var Configuration[] */
 	private $subConfigurations = [];
 
+	/** @var ProjectConfiguration */
+	private $projectConfiguration;
+
 	public function __construct(
 		array $matchPatterns = [],
 		array $excludePatterns = [],
-		PackageConfiguration $packageConfiguration = NULL
+		PackageConfiguration $packageConfiguration = NULL,
+		ProjectConfiguration $projectConfiguration = NULL
 	) {
-		$this->matchPatterns   = $matchPatterns;
-		$this->excludePatterns = $excludePatterns;
-		$this->interpreter     = new ImportConfigurationInterpreter($this);
-		$this->package         = $packageConfiguration;
+		$this->matchPatterns        = $matchPatterns;
+		$this->excludePatterns      = $excludePatterns;
+		$this->interpreter          = new ImportConfigurationInterpreter($this);
+		$this->package              = $packageConfiguration;
+		$this->projectConfiguration = $projectConfiguration;
 	}
 
 	/**
@@ -51,13 +56,6 @@ class Configuration implements ImportConfiguration {
 	}
 
 	/**
-	 * @return PackageConfiguration
-	 */
-	public function getPackageConfiguration() {
-		return $this->package;
-	}
-
-	/**
 	 * @param string        $path
 	 * @param Configuration $configuration
 	 */
@@ -73,7 +71,8 @@ class Configuration implements ImportConfiguration {
 		$merged = new Configuration(
 			array_merge($this->matchPatterns, $other->matchPatterns),
 			array_merge($this->excludePatterns, $other->excludePatterns),
-			$other->getPackageConfiguration() ? $other->getPackageConfiguration() : $this->getPackageConfiguration()
+			$other->getPackage() ? $other->getPackage() : $this->getPackage(),
+			$other->getProject() ? $other->getProject() : $this->getProject()
 		);
 
 		$merged->subConfigurations = array_merge($this->subConfigurations, $other->subConfigurations);
@@ -93,6 +92,13 @@ class Configuration implements ImportConfiguration {
 	 */
 	public function getPackage() {
 		return $this->package;
+	}
+
+	/**
+	 * @return ProjectConfiguration
+	 */
+	public function getProject() {
+		return $this->projectConfiguration;
 	}
 
 	/**
