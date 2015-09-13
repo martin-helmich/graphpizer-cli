@@ -1,5 +1,5 @@
 {
-    "id": "http://www.martin-helmich.de/projects/graphizer/schema/config.json",
+    "id": "https://github.com/martin-helmich/graphpizer-cli/blob/master/res/config-schema.json",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GraPHPizer configuration schema",
     "type": "object",
@@ -45,7 +45,6 @@
                 }
             }
         },
-
         "packageManual": {
             "type": "object",
             "additionalProperties": false,

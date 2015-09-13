@@ -35,7 +35,7 @@ class ImportCommand extends AbstractCommand {
 
 		$configurationReader  = new ConfigurationReader();
 		$defaultConfiguration =
-			$configurationReader->readConfigurationFromFile(__DIR__ . '/../../../res/DefaultImportConfiguration.json');
+			$configurationReader->readConfigurationFromFile(__DIR__ . '/../../../res/config-default.json');
 
 		$userConfiguration = new Configuration([], $input->getOption('exclude'));
 

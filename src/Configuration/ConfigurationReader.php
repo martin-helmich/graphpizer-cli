@@ -17,10 +17,10 @@ class ConfigurationReader {
 		$retriever     = new UriRetriever();
 		$baseDirectory = realpath(__DIR__ . '/../../res');
 
-		$this->schema = $retriever->retrieve('file://' . $baseDirectory . '/ConfigSchema.json');
+		$this->schema = $retriever->retrieve('file://' . $baseDirectory . '/config-schema.json');
 
 		$refResolver = new RefResolver($retriever);
-		$refResolver->resolve($this->schema, 'file://' . $baseDirectory . '/ConfigSchema.json');
+		$refResolver->resolve($this->schema, 'file://' . $baseDirectory . '/config-schema.json');
 
 		$this->validator = new Validator();
 	}
