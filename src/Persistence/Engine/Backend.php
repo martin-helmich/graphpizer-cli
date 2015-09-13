@@ -74,9 +74,7 @@ class Backend implements BackendInterface {
 	public function import(ProjectConfiguration $project, $data) {
 		$uri = $this->buildUrl($project, '/import/start');
 		if (!json_encode($data)) {
-			var_dump($data);
-			var_dump(json_last_error_msg());
-			throw new \Exception('Fuck off, PHP!');
+			throw new \Exception(json_last_error_msg());
 		}
 
 		$this->debugger->queryExecuting($uri, $data);
