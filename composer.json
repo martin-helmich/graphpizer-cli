@@ -22,7 +22,7 @@
         "symfony/console": "*",
         "justinrainbow/json-schema": "*",
         "twig/twig": "~1.0",
-        "guzzlehttp/guzzle": "~5.0"
+        "guzzlehttp/guzzle": "~6.0"
     },
     "require-dev": {
         "phpunit/phpunit": "*",

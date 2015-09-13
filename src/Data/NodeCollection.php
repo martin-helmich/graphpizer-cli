@@ -3,6 +3,7 @@ namespace Helmich\Graphizer\Data;
 
 use Everyman\Neo4j\Label;
 use Everyman\Neo4j\Node;
+use Helmich\Graphizer\Persistence\BackendInterface;
 use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Persistence\PreparedStatement;
 
@@ -25,7 +26,7 @@ class NodeCollection {
 	 */
 	static private $stmt;
 
-	public function __construct(Backend $backend, Node $node) {
+	public function __construct(BackendInterface $backend, Node $node) {
 		$this->assertNodeIsCollection($node);
 		$this->node    = $node;
 		$this->backend = $backend;

@@ -26,17 +26,28 @@ class Backend implements BackendInterface {
 	/** @var array */
 	private $knownProjects = [];
 
-	public function __construct(Client $client,
-		$host,
-		$port,
-		DebuggerInterface $debugger = NULL
-	) {
+	/**
+	 * @param Client            $client   An HTTP client object
+	 * @param string            $host     The GraPHPizer server hostname
+	 * @param string            $port     The GraPHPizer server port
+	 * @param DebuggerInterface $debugger A debugger instance
+	 */
+	public function __construct(Client $client, $host, $port, DebuggerInterface $debugger = NULL) {
 		$this->client   = $client;
 		$this->host     = $host;
 		$this->port     = $port;
 		$this->debugger = $debugger ? $debugger : new NullDebugger();
 
 		$this->baseUrl = 'http://' . $this->host . ':' . $this->port;
+	}
+
+	/**
+	 * Returns the raw HTTP client
+	 *
+	 * @return Client
+	 */
+	public function getClient() {
+		return $this->client;
 	}
 
 	/**
@@ -54,7 +65,7 @@ class Backend implements BackendInterface {
 			return;
 		}
 
-		$response = $this->client->put($this->buildUrl($project), ['json' => $json]);
+		$response                                 = $this->client->put($this->buildUrl($project), ['json' => $json]);
 		$this->knownProjects[$project->getSlug()] = $checksum;
 
 		if ($response->getStatusCode() >= 400) {
@@ -64,6 +75,13 @@ class Backend implements BackendInterface {
 		$this->debugger->projectUpserted($project);
 	}
 
+	/**
+	 * Removes all data of a project
+	 *
+	 * @param ProjectConfiguration $project The project for which to delete all data
+	 * @return void
+	 * @throws \Exception
+	 */
 	public function wipe(ProjectConfiguration $project) {
 		$response = $this->client->post($this->buildUrl($project, '/wipe'));
 		if ($response->getStatusCode() >= 400) {
@@ -71,6 +89,14 @@ class Backend implements BackendInterface {
 		}
 	}
 
+	/**
+	 * Imports an AST data set for a project
+	 *
+	 * @param ProjectConfiguration $project The project to import data into
+	 * @param array                $data    The dataset to import
+	 * @return void
+	 * @throws \Exception
+	 */
 	public function import(ProjectConfiguration $project, $data) {
 		$uri = $this->buildUrl($project, '/import/start');
 		if (!json_encode($data)) {
@@ -88,18 +114,22 @@ class Backend implements BackendInterface {
 	}
 
 	/**
-	 * @param ProjectConfiguration $project
-	 * @return BulkOperation
+	 * Creates a new bulk operation object
+	 *
+	 * @param ProjectConfiguration $project The project for which to create operations.
+	 * @return BulkOperation The bulk operation
 	 */
 	public function createBulkOperation(ProjectConfiguration $project) {
 		return new JsonBulkOperation($project, $this);
 	}
 
 	/**
-	 * @param ProjectConfiguration $project
-	 * @param string               $filename
-	 * @param string               $checksum
-	 * @return bool
+	 * Checks if a file was changed since the last import
+	 *
+	 * @param ProjectConfiguration $project  The project
+	 * @param string               $filename The filename
+	 * @param string               $checksum The file's checksum
+	 * @return bool TRUE if the file is unchanged, otherwise FALSE
 	 */
 	public function isFileUnchanged(ProjectConfiguration $project, $filename, $checksum) {
 		$uri      = $this->buildUrl($project, '/files/?', array(ltrim($filename, '/')));

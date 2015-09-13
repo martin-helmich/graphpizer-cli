@@ -20,36 +20,24 @@
 
 namespace Helmich\Graphizer\Service;
 
-use Helmich\Graphizer\Modeler\ClassModelGenerator;
-use Helmich\Graphizer\Modeler\NamespaceResolver;
-use Helmich\Graphizer\Modeler\TypeInference\TypeResolver;
-use Helmich\Graphizer\Modeler\UsageAnalyzer;
-use Helmich\Graphizer\Persistence\Neo4j\Backend;
+use Helmich\Graphizer\Configuration\ProjectConfiguration;
+use Helmich\Graphizer\Persistence\BackendInterface;
 
 class ModelGenerationService {
 
 	/**
-	 * @var Backend
+	 * @var BackendInterface
 	 */
 	private $backend;
 
-	public function __construct(Backend $backend) {
+	public function __construct(BackendInterface $backend) {
 		$this->backend = $backend;
 	}
 
-	public function generateModel($withUsage = FALSE) {
-		$namespaceResolver = new NamespaceResolver($this->backend);
-		$namespaceResolver->run();
+	public function generateModel(ProjectConfiguration $project) {
+		$client = $this->backend->getClient();
+		$uri = '/projects/' . urlencode($project->getSlug()) . '/model/generate';
 
-		$modelGenerator = new ClassModelGenerator($this->backend, $namespaceResolver);
-		$modelGenerator->run();
-
-		$typeResolver = new TypeResolver($this->backend);
-		$typeResolver->run();
-
-		if ($withUsage) {
-			$usageAnalyzer = new UsageAnalyzer($this->backend);
-			$usageAnalyzer->run();
-		}
+		$client->post($uri);
 	}
 }

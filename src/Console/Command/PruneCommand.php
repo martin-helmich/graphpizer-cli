@@ -12,7 +12,7 @@ class PruneCommand extends AbstractCommand {
 		$this
 			->setName('import:prune')
 			->setDescription('Clear the database of everything. Really, everything!')
-			->addArgument('project', InputArgument::REQUIRED, 'The project to wipe', 'default');
+			->addArgument('project', InputArgument::OPTIONAL, 'The project to wipe', 'default');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {

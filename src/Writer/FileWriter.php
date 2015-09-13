@@ -67,7 +67,7 @@ class FileWriter {
 			$configuration = $configuration->merge($configuration->getConfigurationForSubDirectory($directory));
 		}
 
-		$configurationFileName = $directory . '/.graphizer.json';
+		$configurationFileName = $directory . '/.graphpizer.json';
 		if (file_exists($configurationFileName)) {
 			$this->listener->onConfigApplied($configurationFileName);
 

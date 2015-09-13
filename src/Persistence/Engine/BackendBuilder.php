@@ -16,13 +16,12 @@ class BackendBuilder {
 
 	protected $port = 7474;
 
-//	protected $user          = NULL;
-//
-//	protected $password      = NULL;
-
 	protected $debugger = NULL;
 
 	protected $clientFactory = NULL;
+
+	/** @var boolean */
+	private $httpDebug = FALSE;
 
 	/**
 	 * @param string $host
@@ -41,24 +40,6 @@ class BackendBuilder {
 		$this->port = $port;
 		return $this;
 	}
-
-//	/**
-//	 * @param string $user
-//	 * @return self
-//	 */
-//	public function setUser($user) {
-//		$this->user = $user;
-//		return $this;
-//	}
-//
-//	/**
-//	 * @param string $password
-//	 * @return self
-//	 */
-//	public function setPassword($password) {
-//		$this->password = $password;
-//		return $this;
-//	}
 
 	/**
 	 * @param DebuggerInterface $debugger
@@ -79,6 +60,15 @@ class BackendBuilder {
 	}
 
 	/**
+	 * @param boolean $debug
+	 * @return self
+	 */
+	public function setHttpDebug($debug) {
+		$this->httpDebug = $debug;
+		return $this;
+	}
+
+	/**
 	 * @return Backend
 	 */
 	public function build() {
@@ -95,7 +85,10 @@ class BackendBuilder {
 		if ($this->clientFactory) {
 			return call_user_func($this->clientFactory, $this->host, $this->port);
 		} else {
-			return new Client();
+			return new Client([
+				'base_uri' => 'http://' . $this->host . ':' . $this->port,
+				'debug' => $this->httpDebug
+			]);
 		}
 	}
 }

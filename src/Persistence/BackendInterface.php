@@ -2,9 +2,17 @@
 namespace Helmich\Graphizer\Persistence;
 
 
+use GuzzleHttp\Client;
 use Helmich\Graphizer\Configuration\ProjectConfiguration;
 
 interface BackendInterface {
+
+	/**
+	 * Returns the raw HTTP client
+	 *
+	 * @return Client
+	 */
+	public function getClient();
 
 	/**
 	 * Creates or updates a project on the remote server

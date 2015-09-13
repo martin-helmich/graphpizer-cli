@@ -1,9 +1,12 @@
 <?php
 namespace Helmich\Graphizer\Console\Command;
 
+use Helmich\Graphizer\Configuration\Configuration;
+use Helmich\Graphizer\Configuration\ConfigurationReader;
+use Helmich\Graphizer\Configuration\ProjectConfiguration;
 use Helmich\Graphizer\Service\ModelGenerationService;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class GenerateModelCommand extends AbstractCommand {
@@ -12,13 +15,22 @@ class GenerateModelCommand extends AbstractCommand {
 		$this
 			->setName('generate:model')
 			->setDescription('Generates a meta model from stored syntax trees')
-			->addOption('with-usage', NULL, InputOption::VALUE_NONE, 'Analyze class usages');
+			->addArgument('project', InputArgument::OPTIONAL, 'The project to import', 'default');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
+		$configurationFileName = getcwd() . '/.graphpizer.json';
+		if (file_exists($configurationFileName)) {
+			$configurationReader = new ConfigurationReader();
+			$configuration = $configurationReader->readConfigurationFromFile($configurationFileName);
+		} else {
+			$project = new ProjectConfiguration($input->getArgument('project'), 'Project');
+			$configuration = new Configuration([], [], NULL, $project);
+		}
+
 		$backend = $this->connect($input, $output);
 
 		$service = new ModelGenerationService($backend);
-		$service->generateModel($input->getOption('with-usage'));
+		$service->generateModel($configuration->getProject());
 	}
 }
