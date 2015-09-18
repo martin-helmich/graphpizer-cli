@@ -20,6 +20,7 @@
 namespace Helmich\Graphizer\Persistence\Engine;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request;
 use Helmich\Graphizer\Configuration\ProjectConfiguration;
 use Helmich\Graphizer\Persistence\BackendInterface;
 use Helmich\Graphizer\Persistence\BulkOperation;
@@ -150,8 +151,8 @@ class Backend implements BackendInterface {
 	 */
 	public function isFileUnchanged(ProjectConfiguration $project, $filename, $checksum) {
 		$uri      = $this->buildUrl($project, '/files/?', array(ltrim($filename, '/')));
-		$request  = new Request('HEAD', $uri, ['ETag' => $checksum], NULL, ['exceptions' => FALSE]);
-		$response = $this->client->send($request);
+		$request  = new Request('HEAD', $uri, ['ETag' => $checksum], NULL);
+		$response = $this->client->send($request, ['exceptions' => FALSE]);
 
 		return $response->getStatusCode() == 304;
 	}
