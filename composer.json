@@ -17,11 +17,9 @@
     "require": {
         "php": ">= 5.5",
         "nikic/php-parser": "dev-master",
-        "everyman/neo4jphp": "dev-feature/query-statistics",
         "phpdocumentor/reflection-docblock": "*",
         "symfony/console": "*",
         "justinrainbow/json-schema": "*",
-        "twig/twig": "~1.0",
         "guzzlehttp/guzzle": "~6.0"
     },
     "require-dev": {
