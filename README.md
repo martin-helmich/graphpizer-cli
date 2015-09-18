@@ -10,7 +10,7 @@ support.
 
 Martin Helmich
 
-This project is [LGPL-licensed](LICENSE.txt).
+This project is [GPL-licensed](LICENSE).
 
 ## What is GraPHPizer?
 
