@@ -72,7 +72,7 @@ class FileWriterBuilder {
 			$this->configurationReader = new ConfigurationReader();
 		}
 
-		$parser = new Parser\Php5(new Lexer());
+		$parser = new Parser(new Lexer());
 		$fileParser = new CachingDecorator(new FileParser($parser), getcwd() . '/.graphizer-cache');
 
 		return new FileWriter(
