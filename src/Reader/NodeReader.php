@@ -80,7 +80,7 @@ class NodeReader implements NodeReaderInterface {
 	}
 
 	private function isCollection(NeoNode $nn) {
-		return $this->doesNodeHaveLabel($nn, NodeCollection::NODE_NAME);
+		return $this->doesNodeHaveLabel($nn, 'Collection');
 	}
 
 	private function getClassForNode(NeoNode $nn) {
