@@ -8,3 +8,6 @@
 
 # Build-related
 /build/
+
+# GraPHPizer-related
+/.graphizer-cache
