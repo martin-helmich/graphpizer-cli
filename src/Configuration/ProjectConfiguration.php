@@ -1,8 +1,6 @@
 <?php
-namespace Helmich\Graphizer\Configuration;
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,6 +16,8 @@ namespace Helmich\Graphizer\Configuration;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+namespace Helmich\Graphizer\Configuration;
 
 class ProjectConfiguration implements \JsonSerializable {
 
