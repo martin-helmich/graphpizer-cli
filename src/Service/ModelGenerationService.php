@@ -2,6 +2,7 @@
 namespace Helmich\Graphizer\Service;
 
 use Helmich\Graphizer\Modeler\ClassModelGenerator;
+use Helmich\Graphizer\Modeler\DependencyAnalyzer;
 use Helmich\Graphizer\Modeler\NamespaceResolver;
 use Helmich\Graphizer\Modeler\UsageAnalyzer;
 use Helmich\Graphizer\Persistence\Backend;
@@ -17,7 +18,7 @@ class ModelGenerationService {
 		$this->backend = $backend;
 	}
 
-	public function generateModel($withUsage = FALSE) {
+	public function generateModel($withUsage = FALSE, $withDependencies = FALSE) {
 		$namespaceResolver = new NamespaceResolver($this->backend);
 
 		$modelGenerator = new ClassModelGenerator($this->backend, $namespaceResolver);
@@ -26,6 +27,11 @@ class ModelGenerationService {
 		if ($withUsage) {
 			$usageAnalyzer = new UsageAnalyzer($this->backend);
 			$usageAnalyzer->run();
+		}
+
+		if ($withDependencies) {
+			$dependencyAnalyzer = new DependencyAnalyzer($this->backend);
+			$dependencyAnalyzer->run();
 		}
 	}
 }

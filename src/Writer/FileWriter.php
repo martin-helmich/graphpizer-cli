@@ -144,7 +144,7 @@ class FileWriter {
 		if ($package) {
 			$cypher = 'MATCH (c:Collection) WHERE id(c)={root}
 			           MERGE (p:Package {name: {pkg}.name, description: {pkg}.description})
-			           MERGE (p)-[:CONTAINS]->(c)';
+			           MERGE (p)-[:CONTAINS_FILE]->(c)';
 			$this->backend->createQuery($cypher)->execute(['root' => $collectionNode, 'pkg' => ['name' => $package->getName(), 'description' => $package->getDescription()]]);
 		}
 

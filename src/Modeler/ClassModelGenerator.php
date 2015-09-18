@@ -47,6 +47,19 @@ class ClassModelGenerator {
 		$this->findInterfaceImplementations();
 		$this->findTraitUsages();
 		$this->findMethodImplementations();
+
+		$this->backend->execute(
+			'MATCH (c:Class)-[:DEFINED_IN]->(stmt)<-[:SUB|HAS*]-(:File)<-[:CONTAINS_FILE]-(p:Package)
+			 MERGE (p)-[:CONTAINS_CLASS]->(c)'
+		);
+		$this->backend->execute(
+			'MATCH (c:Trait)-[:DEFINED_IN]->(stmt)<-[:SUB|HAS*]-(:File)<-[:CONTAINS_FILE]-(p:Package)
+			 MERGE (p)-[:CONTAINS_CLASS]->(c)'
+		);
+		$this->backend->execute(
+			'MATCH (c:Interface)-[:DEFINED_IN]->(stmt)<-[:SUB|HAS*]-(:File)<-[:CONTAINS_FILE]-(p:Package)
+			 MERGE (p)-[:CONTAINS_CLASS]->(c)'
+		);
 	}
 
 	private function findTraitUsages() {
@@ -325,7 +338,7 @@ class ClassModelGenerator {
 
 	/**
 	 * @param string $type
-	 * @param array $importScope
+	 * @param array  $importScope
 	 * @param string $currentNamespace
 	 * @return Node
 	 * @throws \Exception
@@ -335,7 +348,7 @@ class ClassModelGenerator {
 			$cypher = 'MERGE (n:Type{name: {name}, primitive: {primitive}, collection: {collection}}) RETURN n';
 			$query  = $this->backend->createQuery($cypher, 'n');
 
-			return $query->execute(['name' => $type, 'primitive' => $primitive])[0];
+			return $query->execute(['name' => $type, 'primitive' => $primitive, 'collection' => $collection])[0];
 		};
 
 		if (preg_match(',^(?P<inner>.+)\[\],', $type, $matches)) {
@@ -351,7 +364,7 @@ class ClassModelGenerator {
 				           RETURN t';
 				$query  = $this->backend->createQuery($cypher, 't');
 
-				return $query->execute(['name' => $type, 'inner' => $inner])[0];
+				return $query->execute(['name' => $matches['outer'] . '<' . $inner->getProperty('name') . '>', 'inner' => $inner])[0];
 			}
 		}
 
