@@ -1,7 +1,6 @@
 <?php
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,7 +22,7 @@ namespace Helmich\Graphizer\Persistence\Op;
 /**
  * Creates a new edge between two nodes.
  *
- * @package Helmich\Graphizer
+ * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
 class CreateEdge implements Operation {
@@ -100,6 +99,19 @@ class CreateEdge implements Operation {
 				$this->end->getId()
 			);
 		}
+	}
+
+	public function toJson() {
+		return [
+			'relationships' => [
+				[
+					'from'       => $this->start->getId(),
+					'to'         => $this->end->getId(),
+					'label'      => $this->type,
+					'properties' => (object) $this->properties
+				]
+			]
+		];
 	}
 
 	/**

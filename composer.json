@@ -8,19 +8,23 @@
             "email": "kontakt@martin-helmich.de"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/martin-helmich/neo4jphp"
+        }
+    ],
     "require": {
         "php": ">= 5.5",
-        "nikic/php-parser": "dev-master",
-        "everyman/neo4jphp": "*",
-        "phpdocumentor/reflection-docblock": "*",
-        "symfony/console": "*",
-        "justinrainbow/json-schema": "*",
-        "twig/twig": "~1.0"
+        "nikic/php-parser": "~1.4",
+        "phpdocumentor/reflection-docblock": "~2.0",
+        "symfony/console": "~2.7",
+        "justinrainbow/json-schema": "~1.5",
+        "guzzlehttp/guzzle": "~6.0"
     },
     "require-dev": {
         "phpunit/phpunit": "*",
-        "phing/phing": "*",
-        "fzaninotto/faker": "~1.5"
+        "phing/phing": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

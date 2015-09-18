@@ -17,21 +17,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Persistence;
+namespace Helmich\Graphizer\Configuration;
 
-use Helmich\Graphizer\Configuration\ProjectConfiguration;
+class ProjectTransformationConfiguration {
 
-class NullDebugger implements DebuggerInterface {
+	/** @var string */
+	private $when;
 
-	public function queryExecuted($cypher, array $args) {
+	/** @var string */
+	private $cypher;
+
+	public function __construct($when, $cypher) {
+		$this->when   = $when;
+		$this->cypher = $cypher;
 	}
 
-	public function nodeCreated($id, array $labels) {
+	/**
+	 * @return string
+	 */
+	public function getWhen() {
+		return $this->when;
 	}
 
-	public function queryExecuting($cypher, array $args) {
+	/**
+	 * @return string
+	 */
+	public function getCypher() {
+		return $this->cypher;
 	}
 
-	public function projectUpserted(ProjectConfiguration $project) {
-	}
+
 }

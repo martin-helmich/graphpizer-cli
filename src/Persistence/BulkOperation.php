@@ -1,7 +1,6 @@
 <?php
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,31 +28,12 @@ use Helmich\Graphizer\Persistence\Op\Operation;
  * @package    Helmich\Graphizer
  * @subpackage Persistence
  */
-class BulkOperation {
+abstract class BulkOperation {
 
 	/**
 	 * @var Operation[]
 	 */
 	protected $operations = [];
-
-	/**
-	 * @var Backend
-	 */
-	protected $backend;
-
-	/**
-	 * @var int
-	 */
-	private $chunkSize;
-
-	/**
-	 * @param Backend $backend
-	 * @param int     $chunkSize
-	 */
-	public function __construct(Backend $backend, $chunkSize = 1000) {
-		$this->backend   = $backend;
-		$this->chunkSize = $chunkSize;
-	}
 
 	/**
 	 * @param Operation $operation
@@ -63,45 +43,8 @@ class BulkOperation {
 	}
 
 	/**
-	 * @return TypedResultRowAdapter[]
+	 * @return \Traversable
 	 */
-	public function evaluate() {
-		if (0 === count($this->operations)) {
-			return NULL;
-		}
+	abstract public function evaluate();
 
-		/** @var Operation[][] $chunks */
-		$chunks     = array_chunk($this->operations, $this->chunkSize);
-		$lastResult = NULL;
-
-		foreach ($chunks as $chunk) {
-			$cypher     = '';
-			$arguments  = [];
-			$knownNodes = [];
-
-			foreach ($chunk as $operation) {
-				if ($operation instanceof NodeMatcher) {
-					$knownNodes[$operation->getId()] = $operation->getId();
-				}
-
-				foreach ($operation->getRequiredNodes() as $requiredNode) {
-					if (!isset($knownNodes[$requiredNode->getId()])) {
-						$knownNodes[$requiredNode->getId()] = $requiredNode->getId();
-
-						$matcher   = $requiredNode->getMatcher();
-						$cypher    = $matcher->toCypher() . "\n" . $cypher;
-						$arguments = array_merge($arguments, $matcher->getArguments());
-					}
-				}
-
-				$arguments = array_merge($arguments, $operation->getArguments());
-				$cypher .= $operation->toCypher() . "\n";
-			}
-
-			$query      = $this->backend->createQuery($cypher);
-			$lastResult = $query->execute($arguments);
-		}
-
-		return $lastResult;
-	}
 }

@@ -28,7 +28,7 @@ use Helmich\Graphizer\Persistence\Op\Builder\UpdateBuilder;
  * @package    Helmich\Graphizer
  * @subpackage Persistence\Op
  */
-class CreateNode extends AbstractOperation implements NodeMatcher {
+class MergeNode extends AbstractOperation implements NodeMatcher {
 
 	use EdgeBuilder;
 	use UpdateBuilder;
@@ -43,7 +43,7 @@ class CreateNode extends AbstractOperation implements NodeMatcher {
 	 * @param array  $properties
 	 */
 	public function __construct($label, array $properties = []) {
-		$this->id         = uniqid('node');
+		$this->id         = 'node' . sha1(json_encode($properties));
 		$this->labels     = [$label];
 		$this->properties = $this->filterProperties($properties);
 	}
@@ -74,11 +74,16 @@ class CreateNode extends AbstractOperation implements NodeMatcher {
 	 * @return string
 	 */
 	public function toCypher() {
+		$propValues = [];
+		foreach ($this->properties as $key => $value) {
+			$propValues[] = sprintf('%s: {prop_%s}.%s', $key, $this->id, $key);
+		}
+
 		return sprintf(
-			'CREATE (%s:%s {prop_%s})',
+			'CREATE (%s:%s {%s})',
 			$this->id,
 			implode(':', $this->labels),
-			$this->id
+			implode(', ', $propValues)
 		);
 	}
 
@@ -88,13 +93,12 @@ class CreateNode extends AbstractOperation implements NodeMatcher {
 	public function toJson() {
 		$properties              = $this->properties;
 		$properties['__node_id'] = $this->id;
-
 		return [
 			'nodes' => [
 				[
 					'labels'     => $this->labels,
-					'properties' => (object) $properties,
-					'merge'      => FALSE
+					'properties' => $properties,
+					'merge'      => TRUE
 				]
 			]
 		];

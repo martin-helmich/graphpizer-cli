@@ -1,46 +1,58 @@
 <?php
+/*
+ * GraPHPizer source code analytics engine (cli component)
+ * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 namespace Helmich\Graphizer\Writer;
 
 use Helmich\Graphizer\Configuration\ConfigurationReader;
 use Helmich\Graphizer\Configuration\ImportConfiguration;
 use Helmich\Graphizer\Configuration\PackageConfiguration;
-use Helmich\Graphizer\Persistence\Backend;
+use Helmich\Graphizer\Parser\FileParser;
+use Helmich\Graphizer\Persistence\BackendInterface;
+use Helmich\Graphizer\Persistence\Engine\JsonBulkOperation;
+use Helmich\Graphizer\Persistence\Op\MergeNode;
 use PhpParser\Error;
 use PhpParser\Parser;
 
 class FileWriter {
 
-	/**
-	 * @var NodeWriterInterface
-	 */
+	/** @var NodeWriterInterface */
 	private $nodeWriter;
 
-	/**
-	 * @var Parser
-	 */
+	/** @var FileParser */
 	private $parser;
 
-	/**
-	 * @var Backend
-	 */
+	/** @var BackendInterface */
 	private $backend;
 
-	/**
-	 * @var ImportConfiguration
-	 */
+	/** @var ImportConfiguration */
 	private $configuration;
 
-	/**
-	 * @var ConfigurationReader
-	 */
+	/** @var ConfigurationReader */
 	private $configurationReader;
 
 	/** @var FileWriterDispatchingListener */
 	private $listener;
 
-	public function __construct(Backend $backend,
+	public function __construct(
+		BackendInterface $backend,
 		NodeWriterInterface $nodeWriter,
-		Parser $parser,
+		FileParser $parser,
 		ImportConfiguration $configuration,
 		ConfigurationReader $configurationReader
 	) {
@@ -63,7 +75,8 @@ class FileWriter {
 		$this->listener->onFinish($directory);
 	}
 
-	private function readDirectoryRecursive($directory,
+	private function readDirectoryRecursive(
+		$directory,
 		ImportConfiguration $configuration,
 		$baseDirectory,
 		PackageConfiguration $package = NULL
@@ -72,7 +85,7 @@ class FileWriter {
 			$configuration = $configuration->merge($configuration->getConfigurationForSubDirectory($directory));
 		}
 
-		$configurationFileName = $directory . '/.graphizer.json';
+		$configurationFileName = $directory . '/.graphpizer.json';
 		if (file_exists($configurationFileName)) {
 			$this->listener->onConfigApplied($configurationFileName);
 
@@ -89,6 +102,8 @@ class FileWriter {
 			}
 		}
 
+		$this->backend->upsertProject($configuration->getProject());
+
 		$entries = scandir($directory);
 		foreach ($entries as $entry) {
 			if ($entry[0] == '.') {
@@ -97,7 +112,7 @@ class FileWriter {
 
 			$entryPath = $directory . '/' . $entry;
 			if (is_dir($entryPath)) {
-				if ($configuration->getInterpreter()->isDirectoryEntryMatching($entry)) {
+				if ($configuration->getInterpreter()->isDirectoryEntryMatching($entryPath)) {
 					$this->readDirectoryRecursive($entryPath, $configuration, $baseDirectory, $package);
 				}
 			} else {
@@ -126,29 +141,41 @@ class FileWriter {
 		$time = microtime(TRUE);
 		$this->listener->onFileReading($filename);
 
-		$code = file_get_contents($filename);
+		$relativeFilename =
+			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
+		$sha1 = sha1_file($filename);
+
+		if ($this->backend->isFileUnchanged($configuration->getProject(), $relativeFilename, $sha1)) {
+			$this->listener->onFileUnchanged($filename);
+			return NULL;
+		}
+
 		try {
-			$ast = $this->parser->parse($code);
+			$ast = $this->parser->parseFile($filename);
 		} catch (Error $parseError) {
 			$this->listener->onFileFailed($filename, $parseError);
 			return NULL;
 		}
 
-		$relativeFilename =
-			$baseDirectory ? ltrim(substr($filename, strlen($baseDirectory)), '/\\') : dirname($filename);
+		$bulk = $this->backend->createBulkOperation($configuration->getProject());
 
-		$collectionNode = $this->nodeWriter->writeNodeCollection($ast);
-		$collectionNode->setProperty('filename', $relativeFilename);
-		$collectionNode->save();
+		$collectionNode = $this->nodeWriter->writeNodeCollection($ast, $bulk);
+		$collectionNode->filename($relativeFilename);
+		$collectionNode->checksum($sha1);
 
 		if ($package) {
-			$cypher = 'MATCH (c:Collection) WHERE id(c)={root}
-			           MERGE (p:Package {name: {pkg}.name, description: {pkg}.description})
-			           MERGE (p)-[:CONTAINS_FILE]->(c)';
-			$this->backend->createQuery($cypher)->execute(['root' => $collectionNode, 'pkg' => ['name' => $package->getName(), 'description' => $package->getDescription()]]);
+			/** @var MergeNode $mergePackage */
+			$mergePackage = (new MergeNode('Package'))
+				->name($package->getName())
+				->description($package->getDescription());
+
+			$bulk->push($mergePackage);
+			$bulk->push($mergePackage->relate('CONTAINS_FILE', $collectionNode));
 		}
 
-		$this->backend->labelNode($collectionNode, 'File');
+		$collectionNode->addLabel('File');
+		$bulk->evaluate();
+
 		$this->listener->onFileRead($filename, (microtime(TRUE) - $time) * 1000);
 
 		return $collectionNode;
@@ -157,12 +184,16 @@ class FileWriter {
 	private function autoDiscoverPackage($directory) {
 		if (file_exists($directory . '/composer.json')) {
 			$data = json_decode($directory . '/composer.json');
-			return new PackageConfiguration(
-				$data->name,
-				isset($data->description) ? $data->description : ''
-			);
-		} else if (file_exists($directory . '/ext_emconf.php')) {
-			$_EXTKEY = dirname($directory);
+			if (isset($data->name)) {
+				return new PackageConfiguration(
+					$data->name,
+					isset($data->description) ? $data->description : ''
+				);
+			}
+		}
+
+		if (file_exists($directory . '/ext_emconf.php')) {
+			$_EXTKEY = basename($directory);
 			$EM_CONF = [];
 
 			require($directory . '/ext_emconf.php');
@@ -172,6 +203,7 @@ class FileWriter {
 				$EM_CONF[$_EXTKEY]['title']
 			);
 		}
+
 		return NULL;
 	}
 }

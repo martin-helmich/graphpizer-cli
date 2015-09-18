@@ -1,8 +1,6 @@
 <?php
-namespace Helmich\Graphizer\Writer;
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,8 +17,11 @@ namespace Helmich\Graphizer\Writer;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Helmich\Graphizer\Persistence\Backend;
+namespace Helmich\Graphizer\Writer;
+
+use Helmich\Graphizer\Persistence\BackendInterface;
 use Helmich\Graphizer\Persistence\BulkOperation;
+use Helmich\Graphizer\Persistence\Neo4j\Backend;
 use Helmich\Graphizer\Persistence\Op\CreateNode;
 use Helmich\Graphizer\Persistence\Op\NodeMatcher;
 use Helmich\Graphizer\Persistence\Op\ReturnObject;
@@ -29,24 +30,17 @@ use PhpParser\Node;
 class NodeWriter implements NodeWriterInterface {
 
 	/**
-	 * @var Backend
-	 */
-	private $backend;
-
-	/**
 	 * @var CommentWriter
 	 */
 	private $commentWriter;
 
-	public function __construct(Backend $backend, CommentWriter $writer) {
-		$this->backend       = $backend;
+	public function __construct(CommentWriter $writer) {
 		$this->commentWriter = $writer;
 	}
 
-	public function writeNodeCollection(array $nodes) {
+	public function writeNodeCollection(array $nodes, BulkOperation $bulk) {
 		$collectionOp = new CreateNode('Collection', ['fileRoot' => TRUE]);
 
-		$bulk = new BulkOperation($this->backend);
 		$bulk->push($collectionOp);
 
 		$i = 0;
@@ -57,14 +51,12 @@ class NodeWriter implements NodeWriterInterface {
 
 		$bulk->push(new ReturnObject($collectionOp));
 
-		return $bulk->evaluate()[0]->node($collectionOp->getId());
+		return $collectionOp;
 	}
 
-	public function writeNode(Node $node) {
-		$bulk = new BulkOperation($this->backend);
+	public function writeNode(Node $node, BulkOperation $bulk) {
 		$bulk->push(new ReturnObject($nodeOp = $this->writeNodeInner($node, $bulk)));
-
-		return $bulk->evaluate()[0]->node($nodeOp->getId());
+		return $nodeOp;
 	}
 
 	/**

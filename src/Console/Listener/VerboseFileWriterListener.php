@@ -1,7 +1,6 @@
 <?php
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,6 +42,10 @@ class VerboseFileWriterListener extends NormalFileWriterListener {
 
 	public function onConfigApplied($configFilename) {
 		$this->output->writeln('Applying configuration from <comment>' . $configFilename . '</comment>');
+	}
+
+	public function onFileUnchanged($filename) {
+		$this->output->writeln("<info>Unchanged</info>");
 	}
 
 }

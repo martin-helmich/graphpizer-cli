@@ -17,21 +17,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Helmich\Graphizer\Persistence;
+namespace Helmich\Graphizer\Parser;
 
-use Helmich\Graphizer\Configuration\ProjectConfiguration;
+use PhpParser\Parser;
 
-class NullDebugger implements DebuggerInterface {
+/**
+ * PHP file parser class.
+ *
+ * @package Helmich\Graphizer
+ * @subpackage Parser
+ */
+class FileParser {
 
-	public function queryExecuted($cypher, array $args) {
+	/**
+	 * @var Parser
+	 */
+	private $parser;
+
+	/**
+	 * @param Parser $parser
+	 */
+	public function __construct(Parser $parser){
+		$this->parser = $parser;
 	}
 
-	public function nodeCreated($id, array $labels) {
-	}
-
-	public function queryExecuting($cypher, array $args) {
-	}
-
-	public function projectUpserted(ProjectConfiguration $project) {
+	public function parseFile($filename) {
+		$code = file_get_contents($filename);
+		return $this->parser->parse($code);
 	}
 }

@@ -1,7 +1,6 @@
 <?php
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -50,6 +49,12 @@ class FileWriterDispatchingListener implements FileWriterListener {
 	public function onFileSkipped($filename) {
 		foreach ($this->listeners as $listener) {
 			$listener->onFileSkipped($filename);
+		}
+	}
+
+	public function onFileUnchanged($filename) {
+		foreach ($this->listeners as $listener) {
+			$listener->onFileUnchanged($filename);
 		}
 	}
 

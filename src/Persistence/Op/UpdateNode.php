@@ -1,7 +1,6 @@
 <?php
-
 /*
- * GraPHPizer - Store PHP syntax trees in a Neo4j database
+ * GraPHPizer source code analytics engine (cli component)
  * Copyright (C) 2015  Martin Helmich <kontakt@martin-helmich.de>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,6 +52,13 @@ class UpdateNode implements Operation {
 			$fieldNames[] = sprintf('%s.%s = {%s}', $this->node->getId(), $key, $this->node->getId() . '_' . $key);
 		}
 		return 'SET ' . implode(', ', $fieldNames);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function toJson() {
+		throw new \BadMethodCallException('Not supported!');
 	}
 
 	/**
