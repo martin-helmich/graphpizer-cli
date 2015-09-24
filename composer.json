@@ -1,7 +1,7 @@
 {
     "name": "helmich/graphpizer-cli",
     "description": "Store PHP syntax trees in Neo4j graph structures",
-    "license": "LGPL",
+    "license": "GPL-3.0",
     "authors": [
         {
             "name": "Martin Helmich",
