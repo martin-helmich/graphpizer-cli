@@ -8,9 +8,10 @@ support.
 
 ## Author and License
 
-Martin Helmich
-
+Martin Helmich  
 This project is [GPL-licensed](LICENSE).
+
+**Background:** This project started off as part of my (not-yet-complete) master's thesis in CS at the [University of Appliced Sciences Osnabrück][hsos]. It has proven it's worth there and I'll probably continue to develop and maintain it.
 
 ## What is GraPHPizer?
 
@@ -76,3 +77,5 @@ important is the `import:ast` command which is invoked as follows:
 You can specify any number of diretories or files as arguments to the
 `import:ast` call. Furthermore, you can set the `--prune` flag when you don't
 want incremental source code import.
+
+[hsos]: https://www.hs-osnabrueck.de/
