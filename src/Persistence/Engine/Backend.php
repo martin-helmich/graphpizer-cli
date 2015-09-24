@@ -150,7 +150,7 @@ class Backend implements BackendInterface {
 	 * @return bool TRUE if the file is unchanged, otherwise FALSE
 	 */
 	public function isFileUnchanged(ProjectConfiguration $project, $filename, $checksum) {
-		$uri      = $this->buildUrl($project, '/files/?', array(ltrim($filename, '/')));
+		$uri      = $this->buildUrl($project, '/files/' . ltrim($filename, '/'));
 		$request  = new Request('HEAD', $uri, ['ETag' => $checksum], NULL);
 		$response = $this->client->send($request, ['exceptions' => FALSE]);
 
