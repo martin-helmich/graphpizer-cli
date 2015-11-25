@@ -11,7 +11,7 @@ support.
 Martin Helmich  
 This project is [GPL-licensed](LICENSE).
 
-**Background:** This project started off as part of my (not-yet-complete) master's thesis in CS at the [University of Applied Sciences Osnabrück][hsos]. It has proven it's worth there and I'll probably continue to develop and maintain it.
+**Background:** This project started off as part of my master's thesis in CS at the [University of Applied Sciences Osnabrück][hsos]. It has proven it's worth there and I'll probably continue to develop and maintain it.
 
 ## What is GraPHPizer?
 
